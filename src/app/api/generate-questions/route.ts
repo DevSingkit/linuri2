@@ -1,3 +1,4 @@
+// API Route: Generate-Questions
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { Subject, Difficulty } from '@/types/linuri'
 

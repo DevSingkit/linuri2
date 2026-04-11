@@ -1,3 +1,4 @@
+// student/quiz/result
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';

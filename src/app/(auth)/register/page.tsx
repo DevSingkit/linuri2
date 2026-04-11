@@ -1,3 +1,4 @@
+// (auth) Register
 'use client'
 
 import { useState } from 'react'

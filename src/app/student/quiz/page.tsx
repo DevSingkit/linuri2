@@ -1,3 +1,4 @@
+// Student/Quiz
 'use client'
 
 import { useEffect, useState, useRef, Suspense } from 'react'
