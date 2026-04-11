@@ -31,28 +31,25 @@ interface ClassSummary {
 export default function TeacherDashboard() {
   const router = useRouter()
 
-  const [teacherId, setTeacherId]         = useState<string | null>(null)
-  const [classes, setClasses]             = useState<Class[]>([])
-  const [flagged, setFlagged]             = useState<FlaggedStudent[]>([])
-  const [summaries, setSummaries]         = useState<ClassSummary[]>([])
-  const [loading, setLoading]             = useState(true)
-  const [error, setError]                 = useState<string | null>(null)
+  const [teacherId, setTeacherId] = useState<string | null>(null)
+  const [classes, setClasses]     = useState<Class[]>([])
+  const [flagged, setFlagged]     = useState<FlaggedStudent[]>([])
+  const [summaries, setSummaries] = useState<ClassSummary[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       try {
-        // 1. Auth
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) { router.replace('/login'); return }
         setTeacherId(user.id)
 
-        // 2. Classes
         const { data: classData, error: classError } = await getClassesByTeacher(user.id)
         if (classError) throw classError
         const classList = classData ?? []
         setClasses(classList)
 
-        // 3. Mastery summaries per class
         const summaryList: ClassSummary[] = []
         for (const cls of classList) {
           const { data: masteryRows } = await supabase
@@ -61,7 +58,6 @@ export default function TeacherDashboard() {
             .eq('class_id', cls.id)
 
           const rows = masteryRows ?? []
-          // de-duplicate per student (latest mastery only)
           const byStudent: Record<string, string> = {}
           for (const r of rows) byStudent[r.student_id] = r.mastery_level
 
@@ -77,7 +73,6 @@ export default function TeacherDashboard() {
         }
         setSummaries(summaryList)
 
-        // 4. Flagged students (≥2 regressions) across all teacher's classes
         if (classList.length > 0) {
           const classIds = classList.map(c => c.id)
           const { data: flagData } = await getFlaggedStudents(classIds)
@@ -92,11 +87,10 @@ export default function TeacherDashboard() {
     load()
   }, [router])
 
-  // ── loading / error ───────────────────────────────────────────────────────
-
   if (loading) {
     return (
       <AppLayout title="Teacher Dashboard">
+        <style>{`@keyframes td-spin { to { transform: rotate(360deg); } }`}</style>
         <div style={s.center}>
           <div style={s.spinner} />
           <p style={s.muted}>Loading dashboard…</p>
@@ -109,113 +103,158 @@ export default function TeacherDashboard() {
     return (
       <AppLayout title="Teacher Dashboard">
         <div style={s.center}>
-          <p style={{ color: '#8b1a1a' }}>{error}</p>
+          <div style={s.errorCard}>
+            <span style={{ fontSize: '2rem' }}>⚠️</span>
+            <p style={{ color: '#8b1a1a', fontWeight: 600, margin: 0 }}>{error}</p>
+          </div>
         </div>
       </AppLayout>
     )
   }
 
-  // ── render ────────────────────────────────────────────────────────────────
+  const totalMastered   = summaries.reduce((a, b) => a + b.mastered, 0)
+  const totalDeveloping = summaries.reduce((a, b) => a + b.developing, 0)
+  const totalNeedsHelp  = summaries.reduce((a, b) => a + b.needsHelp, 0)
+
+  const masteryMeta: Record<string, { bg: string; color: string; border: string; icon: string }> = {
+    'Mastered':   { bg: '#eaf6ef', color: '#0d5c28', border: 'rgba(26,122,64,0.18)', icon: '⭐' },
+    'Developing': { bg: '#fffbf0', color: '#7a5500', border: 'rgba(200,130,0,0.18)', icon: '📈' },
+    'Needs Help': { bg: '#fff0f0', color: '#8b1a1a', border: 'rgba(155,28,28,0.14)', icon: '🆘' },
+  }
 
   return (
     <AppLayout title="Teacher Dashboard">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        @keyframes td-spin  { to { transform: rotate(360deg); } }
+        @keyframes td-fade  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .td-stat        { transition: box-shadow 0.18s, transform 0.18s; }
+        .td-stat:hover  { box-shadow: 0 6px 20px rgba(13,61,32,0.10); transform: translateY(-2px); }
+        .td-card        { transition: box-shadow 0.18s, transform 0.18s; }
+        .td-card:hover  { box-shadow: 0 8px 24px rgba(13,61,32,0.11); transform: translateY(-2px); }
+        .td-btn-gold:hover    { background: #e09b00 !important; transform: translateY(-1px); }
+        .td-btn-outline:hover { background: #eaf6ef !important; }
+        .td-tr:hover td { background: #f0f9f4 !important; }
+        .td-link:hover  { opacity: 0.75; }
+        .td-content     { animation: td-fade 0.25s ease both; }
+      `}</style>
+
       <div style={s.page}>
 
-        {/* Header row */}
+        {/* ── Header ── */}
         <div style={s.topRow}>
           <div>
+            <div style={s.breadcrumb}>Teacher · Home</div>
             <h1 style={s.heading}>Dashboard</h1>
             <p style={s.muted}>Overview of your classes and student progress</p>
           </div>
           <div style={s.quickLinks}>
-            <button style={s.btnGold}   onClick={() => router.push('/teacher/lessons/new')}>
-              + New Lesson
+            <button
+              className="td-btn-gold"
+              style={s.btnGold}
+              onClick={() => router.push('/teacher/lessons/new')}
+            >
+              ✚ New Lesson
             </button>
-            <button style={s.btnOutline} onClick={() => router.push('/teacher/questions')}>
-              Review Questions
+            <button
+              className="td-btn-outline"
+              style={s.btnOutline}
+              onClick={() => router.push('/teacher/questions')}
+            >
+              🔍 Review Questions
             </button>
           </div>
         </div>
 
-        {/* Stat chips */}
-        <div style={s.chips}>
-          <div style={s.chip}>
-            <span style={s.chipNum}>{classes.length}</span>
-            <span style={s.chipLabel}>Classes</span>
-          </div>
-          <div style={{ ...s.chip, borderColor: '#1b5e30' }}>
-            <span style={{ ...s.chipNum, color: '#1b5e30' }}>
-              {summaries.reduce((a, b) => a + b.mastered, 0)}
-            </span>
-            <span style={s.chipLabel}>Mastered</span>
-          </div>
-          <div style={{ ...s.chip, borderColor: '#c9941a' }}>
-            <span style={{ ...s.chipNum, color: '#7a5a00' }}>
-              {summaries.reduce((a, b) => a + b.developing, 0)}
-            </span>
-            <span style={s.chipLabel}>Developing</span>
-          </div>
-          <div style={{ ...s.chip, borderColor: '#8b1a1a' }}>
-            <span style={{ ...s.chipNum, color: '#8b1a1a' }}>
-              {summaries.reduce((a, b) => a + b.needsHelp, 0)}
-            </span>
-            <span style={s.chipLabel}>Needs Help</span>
-          </div>
-          <div style={{ ...s.chip, borderColor: '#8b1a1a' }}>
-            <span style={{ ...s.chipNum, color: '#8b1a1a' }}>{flagged.length}</span>
-            <span style={s.chipLabel}>Flagged</span>
-          </div>
+        {/* ── Stat cards ── */}
+        <div style={s.statGrid}>
+          {[
+            { label: 'Classes',    value: classes.length,  icon: '🏫', bg: '#fdfaf5', color: '#0d3d20', border: 'rgba(26,122,64,0.13)' },
+            { label: 'Mastered',   value: totalMastered,   icon: '⭐', bg: '#eaf6ef', color: '#0d5c28', border: 'rgba(26,122,64,0.22)' },
+            { label: 'Developing', value: totalDeveloping, icon: '📈', bg: '#fffbf0', color: '#7a5500', border: 'rgba(200,130,0,0.20)' },
+            { label: 'Needs Help', value: totalNeedsHelp,  icon: '🆘', bg: '#fff0f0', color: '#8b1a1a', border: 'rgba(155,28,28,0.18)' },
+            { label: 'Flagged',    value: flagged.length,  icon: '⚠️', bg: '#fff0f0', color: '#8b1a1a', border: 'rgba(155,28,28,0.18)' },
+          ].map(c => (
+            <div key={c.label} className="td-stat" style={{ ...s.statCard, background: c.bg, border: `1.5px solid ${c.border}` }}>
+              <span style={s.statIcon}>{c.icon}</span>
+              <span style={{ ...s.statNum, color: c.color }}>{c.value}</span>
+              <span style={s.statLabel}>{c.label}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Class mastery overview */}
+        {/* ── Class Mastery Overview ── */}
         <section style={s.section}>
-          <h2 style={s.sectionTitle}>Class Mastery Overview</h2>
+          <div style={s.sectionHeader}>
+            <h2 style={s.sectionTitle}>Class Mastery Overview</h2>
+            {summaries.length > 0 && (
+              <span style={s.countBadge}>{summaries.length} class{summaries.length !== 1 ? 'es' : ''}</span>
+            )}
+          </div>
 
           {summaries.length === 0 ? (
             <div style={s.empty}>
-              No classes yet.{' '}
-              <span
-                style={s.link}
-                onClick={() => router.push('/teacher/classes')}
-              >
-                Create a class
-              </span>{' '}
-              to get started.
+              <span style={{ fontSize: '2.5rem' }}>🏫</span>
+              <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20' }}>No classes yet.</p>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>
+                <span
+                  className="td-link"
+                  style={s.link}
+                  onClick={() => router.push('/teacher/classes')}
+                >
+                  Create a class
+                </span>{' '}
+                to start tracking student progress.
+              </p>
             </div>
           ) : (
-            <div style={s.classGrid}>
+            <div className="td-content" style={s.classGrid}>
               {summaries.map(cls => {
                 const pct = (n: number) =>
                   cls.total > 0 ? Math.round((n / cls.total) * 100) : 0
+                const mastPct = pct(cls.mastered)
                 return (
-                  <div key={cls.classId} style={s.classCard}>
+                  <div key={cls.classId} className="td-card" style={s.classCard}>
                     <div style={s.classCardTop}>
-                      <span style={s.classCardName}>{cls.sectionName}</span>
-                      <span style={s.classCardCount}>{cls.total} students</span>
+                      <div style={s.classIconWrap}>🏫</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={s.classCardName}>{cls.sectionName}</div>
+                        <div style={s.classCardSub}>{cls.total} student{cls.total !== 1 ? 's' : ''} tracked</div>
+                      </div>
+                      <div style={{
+                        ...s.mastPctBadge,
+                        background: mastPct >= 70 ? '#eaf6ef' : mastPct >= 40 ? '#fffbf0' : '#fff0f0',
+                        color: mastPct >= 70 ? '#0d5c28' : mastPct >= 40 ? '#7a5500' : '#8b1a1a',
+                      }}>
+                        {mastPct}%
+                      </div>
                     </div>
 
                     {/* Stacked bar */}
-                    {cls.total > 0 ? (
-                      <div style={s.bar}>
-                        {cls.mastered > 0 && (
-                          <div style={{ ...s.barSegment, width: `${pct(cls.mastered)}%`, background: '#1b5e30' }} title={`Mastered: ${cls.mastered}`} />
-                        )}
-                        {cls.developing > 0 && (
-                          <div style={{ ...s.barSegment, width: `${pct(cls.developing)}%`, background: '#c9941a' }} title={`Developing: ${cls.developing}`} />
-                        )}
-                        {cls.needsHelp > 0 && (
-                          <div style={{ ...s.barSegment, width: `${pct(cls.needsHelp)}%`, background: '#8b1a1a' }} title={`Needs Help: ${cls.needsHelp}`} />
-                        )}
-                      </div>
-                    ) : (
-                      <div style={{ ...s.bar, background: '#f0e9d8' }} />
-                    )}
+                    <div style={s.bar}>
+                      {cls.total === 0 ? (
+                        <div style={{ ...s.barSeg, width: '100%', background: '#e5e7eb' }} />
+                      ) : (
+                        <>
+                          {cls.mastered > 0 && (
+                            <div style={{ ...s.barSeg, width: `${pct(cls.mastered)}%`, background: 'linear-gradient(90deg,#1a7a40,#0d5c28)' }} title={`Mastered: ${cls.mastered}`} />
+                          )}
+                          {cls.developing > 0 && (
+                            <div style={{ ...s.barSeg, width: `${pct(cls.developing)}%`, background: 'linear-gradient(90deg,#d4a017,#b07800)' }} title={`Developing: ${cls.developing}`} />
+                          )}
+                          {cls.needsHelp > 0 && (
+                            <div style={{ ...s.barSeg, width: `${pct(cls.needsHelp)}%`, background: 'linear-gradient(90deg,#c0392b,#8b1a1a)' }} title={`Needs Help: ${cls.needsHelp}`} />
+                          )}
+                        </>
+                      )}
+                    </div>
 
                     {/* Legend */}
                     <div style={s.barLegend}>
-                      <span style={{ color: '#1b5e30' }}>● {cls.mastered} Mastered</span>
-                      <span style={{ color: '#7a5a00' }}>● {cls.developing} Developing</span>
-                      <span style={{ color: '#8b1a1a' }}>● {cls.needsHelp} Needs Help</span>
+                      <span style={s.legendItem}><span style={{ ...s.dot, background: '#1a7a40' }} />{cls.mastered} Mastered</span>
+                      <span style={s.legendItem}><span style={{ ...s.dot, background: '#d4a017' }} />{cls.developing} Developing</span>
+                      <span style={s.legendItem}><span style={{ ...s.dot, background: '#c0392b' }} />{cls.needsHelp} Needs Help</span>
                     </div>
                   </div>
                 )
@@ -224,47 +263,68 @@ export default function TeacherDashboard() {
           )}
         </section>
 
-        {/* Flagged students */}
+        {/* ── Flagged Students ── */}
         <section style={s.section}>
-          <h2 style={s.sectionTitle}>
-            Flagged Students
-            <span style={s.flagBadge}>{flagged.length}</span>
-          </h2>
+          <div style={s.sectionHeader}>
+            <h2 style={s.sectionTitle}>Flagged Students</h2>
+            <span style={{
+              ...s.countBadge,
+              background: flagged.length > 0 ? '#fff0f0' : '#eaf6ef',
+              color: flagged.length > 0 ? '#8b1a1a' : '#0d5c28',
+            }}>
+              {flagged.length}
+            </span>
+          </div>
 
           {flagged.length === 0 ? (
-            <div style={s.empty}>No flagged students — great job! 🎉</div>
+            <div style={s.empty}>
+              <span style={{ fontSize: '2.5rem' }}>🎉</span>
+              <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20' }}>No flagged students!</p>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>All students are progressing well.</p>
+            </div>
           ) : (
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  {['Student', 'Skill', 'Mastery', 'Regressions'].map(h => (
-                    <th key={h} style={s.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {flagged.map((f, i) => (
-                  <tr key={i} style={i % 2 === 0 ? s.trEven : s.trOdd}>
-                    <td style={s.td}>{f.users?.name ?? '—'}</td>
-                    <td style={s.td}>{f.skill_name}</td>
-                    <td style={s.td}>
-                      <span style={{
-                        ...s.masteryPill,
-                        background: f.mastery_level === 'Mastered' ? '#f0f7f2'
-                          : f.mastery_level === 'Developing' ? '#fdf8ee' : '#fdf0f0',
-                        color: f.mastery_level === 'Mastered' ? '#1b5e30'
-                          : f.mastery_level === 'Developing' ? '#7a5a00' : '#8b1a1a',
-                      }}>
-                        {f.mastery_level}
-                      </span>
-                    </td>
-                    <td style={{ ...s.td, textAlign: 'center', fontWeight: 600, color: '#8b1a1a' }}>
-                      {f.regression_count}
-                    </td>
+            <div className="td-content" style={s.tableWrap}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    {['Student', 'Skill', 'Mastery', 'Regressions'].map(h => (
+                      <th key={h} style={s.th}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {flagged.map((f, i) => {
+                    const mm = masteryMeta[f.mastery_level] ?? masteryMeta['Needs Help']
+                    return (
+                      <tr key={i} className="td-tr" style={i % 2 === 0 ? s.trEven : s.trOdd}>
+                        <td style={{ ...s.td, fontWeight: 600 }}>
+                          <div style={s.avatarRow}>
+                            <div style={s.avatarDot}>
+                              {(f.users?.name ?? '?').charAt(0).toUpperCase()}
+                            </div>
+                            {f.users?.name ?? '—'}
+                          </div>
+                        </td>
+                        <td style={s.td}>{f.skill_name}</td>
+                        <td style={s.td}>
+                          <span style={{
+                            ...s.pill,
+                            background: mm.bg,
+                            color: mm.color,
+                            border: `1px solid ${mm.border}`,
+                          }}>
+                            {mm.icon} {f.mastery_level}
+                          </span>
+                        </td>
+                        <td style={{ ...s.td, textAlign: 'center' as const }}>
+                          <span style={s.regBadge}>{f.regression_count} ⚠️</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 
@@ -276,41 +336,53 @@ export default function TeacherDashboard() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const s: Record<string, React.CSSProperties> = {
-  page:         { padding: '2rem', maxWidth: '960px', margin: '0 auto' },
-  topRow:       { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' },
-  heading:      { fontFamily: "'DM Serif Display', serif", fontSize: '1.9rem', color: '#0d3a1b', margin: 0 },
-  muted:        { color: '#6b6b6b', fontSize: '0.88rem', margin: '0.25rem 0 0' },
-  quickLinks:   { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' },
-  btnGold:      { background: '#c9941a', color: '#0d3a1b', border: 'none', borderRadius: '8px', padding: '0.6rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit' },
-  btnOutline:   { background: 'transparent', color: '#1b5e30', border: '1.5px solid #1b5e30', borderRadius: '8px', padding: '0.6rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit' },
+  page:          { padding: '2rem', maxWidth: '1000px', margin: '0 auto', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  topRow:        { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' },
+  breadcrumb:    { fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
+  heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '2rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  muted:         { color: '#6b7280', fontSize: '0.875rem', margin: 0 },
+  quickLinks:    { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' as const, alignItems: 'center' },
+  btnGold:       { background: '#f0a500', color: '#0d3d20', border: 'none', borderRadius: '9px', padding: '0.65rem 1.35rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(240,165,0,0.25)', transition: 'background 0.15s, transform 0.15s' },
+  btnOutline:    { background: '#fff', color: '#0d3d20', border: '1.5px solid rgba(26,122,64,0.35)', borderRadius: '9px', padding: '0.6rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' },
 
-  chips:        { display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' },
-  chip:         { background: '#fff', border: '1px solid rgba(27,94,48,0.15)', borderRadius: '10px', padding: '0.85rem 1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' },
-  chipNum:      { fontSize: '1.6rem', fontWeight: 700, color: '#0d3a1b', lineHeight: 1 },
-  chipLabel:    { fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b6b6b', marginTop: '0.25rem' },
+  statGrid:      { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.75rem', marginBottom: '2rem' },
+  statCard:      { borderRadius: '18px', padding: '1.2rem 0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', cursor: 'default' },
+  statIcon:      { fontSize: '1.5rem', lineHeight: 1 },
+  statNum:       { fontSize: '1.85rem', fontWeight: 800, lineHeight: 1, marginTop: '0.2rem' },
+  statLabel:     { fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginTop: '0.2rem', textAlign: 'center' as const },
 
-  section:      { marginBottom: '2.5rem' },
-  sectionTitle: { fontFamily: "'DM Serif Display', serif", fontSize: '1.2rem', color: '#0d3a1b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' },
-  flagBadge:    { background: '#8b1a1a', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '10px' },
+  section:       { marginBottom: '2.5rem' },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' },
+  sectionTitle:  { fontFamily: "'DM Serif Display', serif", fontSize: '1.25rem', color: '#0d3d20', margin: 0 },
+  countBadge:    { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.03em' },
 
-  classGrid:    { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' },
-  classCard:    { background: '#fff', border: '1px solid rgba(27,94,48,0.12)', borderRadius: '10px', padding: '1.1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' },
-  classCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' },
-  classCardName:{ fontWeight: 600, fontSize: '0.95rem', color: '#0d3a1b' },
-  classCardCount:{ fontSize: '0.75rem', color: '#6b6b6b' },
-  bar:          { height: '10px', borderRadius: '6px', background: '#e5e7eb', display: 'flex', overflow: 'hidden' },
-  barSegment:   { height: '100%', transition: 'width 0.4s ease' },
-  barLegend:    { display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' },
+  classGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1rem' },
+  classCard:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', cursor: 'default' },
+  classCardTop:  { display: 'flex', alignItems: 'flex-start', gap: '0.75rem' },
+  classIconWrap: { fontSize: '1.3rem', flexShrink: 0, marginTop: '1px' },
+  classCardName: { fontWeight: 700, fontSize: '0.92rem', color: '#0d3d20', lineHeight: 1.3 },
+  classCardSub:  { fontSize: '0.75rem', color: '#6b7280', marginTop: '0.2rem' },
+  mastPctBadge:  { fontSize: '0.75rem', fontWeight: 800, padding: '3px 9px', borderRadius: '20px', flexShrink: 0, whiteSpace: 'nowrap' as const },
+  bar:           { height: '12px', borderRadius: '99px', background: '#e5e7eb', display: 'flex', overflow: 'hidden' },
+  barSeg:        { height: '100%', transition: 'width 0.4s ease' },
+  barLegend:     { display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' as const, color: '#4b5563', fontWeight: 500 },
+  legendItem:    { display: 'flex', alignItems: 'center', gap: '0.35rem' },
+  dot:           { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, display: 'inline-block' },
 
-  table:        { width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' },
-  th:           { textAlign: 'left', padding: '0.6rem 1rem', background: '#0d3a1b', color: '#e8b84b', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600 },
-  trEven:       { background: '#fff' },
-  trOdd:        { background: '#faf6ee' },
-  td:           { padding: '0.65rem 1rem', borderBottom: '1px solid rgba(27,94,48,0.08)', color: '#1a1a1a', verticalAlign: 'middle' },
-  masteryPill:  { fontSize: '0.72rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px' },
+  tableWrap:     { borderRadius: '16px', overflow: 'hidden', border: '1.5px solid rgba(26,122,64,0.13)', boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
+  table:         { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
+  th:            { textAlign: 'left' as const, padding: '0.75rem 1rem', background: '#0d3d20', color: '#ffd166', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const, fontWeight: 700 },
+  trEven:        { background: '#fff' },
+  trOdd:         { background: '#fdfaf5' },
+  td:            { padding: '0.75rem 1rem', borderBottom: '1px solid rgba(26,122,64,0.08)', color: '#1a1f16', verticalAlign: 'middle' as const },
+  avatarRow:     { display: 'flex', alignItems: 'center', gap: '0.6rem' },
+  avatarDot:     { width: '30px', height: '30px', borderRadius: '50%', background: '#eaf6ef', color: '#0d5c28', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 },
+  pill:          { fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '6px', display: 'inline-block' },
+  regBadge:      { background: '#fff0f0', color: '#8b1a1a', fontWeight: 700, padding: '2px 10px', borderRadius: '6px', fontSize: '0.82rem', display: 'inline-block' },
 
-  empty:        { background: '#fff', border: '1px solid rgba(27,94,48,0.12)', borderRadius: '8px', padding: '1.5rem', color: '#6b6b6b', fontSize: '0.9rem', textAlign: 'center' },
-  link:         { color: '#1b5e30', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' },
-  center:       { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
-  spinner:      { width: '36px', height: '36px', border: '4px solid #f0e9d8', borderTop: '4px solid #1b5e30', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+  empty:         { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '3rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' as const },
+  link:          { color: '#1a7a40', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline', transition: 'opacity 0.15s' },
+  center:        { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
+  errorCard:     { background: '#fff0f0', border: '1.5px solid rgba(155,28,28,0.18)', borderRadius: '18px', padding: '2.5rem 3rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' },
+  spinner:       { width: '40px', height: '40px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'td-spin 0.8s linear infinite' },
 }

@@ -9,443 +9,568 @@ export default function LandingPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          --green:      #1b5e30;
-          --green-dark: #0d3a1b;
-          --green-mid:  #154d26;
-          --crimson:    #8b1a1a;
-          --gold:       #c9941a;
-          --gold-lt:    #e8b84b;
-          --cream:      #faf6ee;
-          --cream2:     #f0e9d8;
-          --white:      #ffffff;
-          --text:       #1a1a1a;
-          --text-soft:  #6b6b6b;
+          --green:       #1a7a40;
+          --green-dark:  #0d3d20;
+          --green-mid:   #1f6b38;
+          --green-light: #eaf6ef;
+          --gold:        #f0a500;
+          --gold-lt:     #ffd166;
+          --gold-bg:     #fffbf0;
+          --cream:       #fdfaf5;
+          --cream2:      #f5efe3;
+          --white:       #ffffff;
+          --text:        #1a1f16;
+          --muted:       #6b7280;
+          --border:      rgba(26,122,64,0.13);
+          --r:           12px;
+          --r-lg:        18px;
+          --r-xl:        26px;
+          --font:        'Plus Jakarta Sans', sans-serif;
         }
 
-        .landing {
-          font-family: 'Outfit', sans-serif;
+        .lp {
+          font-family: var(--font);
           background: var(--cream);
           color: var(--text);
           min-height: 100vh;
+          overflow-x: hidden;
         }
 
         /* ── NAV ── */
-        .nav {
+        .lp-nav {
           position: sticky;
           top: 0;
-          z-index: 100;
-          background: var(--green-dark);
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          z-index: 200;
+          background: rgba(253,250,245,0.88);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-bottom: 1px solid var(--border);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 3rem;
-          height: 64px;
+          padding: 0 2.5rem;
+          height: 62px;
         }
-        .nav-brand {
+        .lp-nav-brand {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 10px;
+          text-decoration: none;
         }
-        .nav-logo-box {
+        .lp-nav-mark {
           width: 36px;
           height: 36px;
-          background: var(--gold);
-          border-radius: 6px;
+          background: var(--green-dark);
+          border-radius: 9px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-family: 'DM Serif Display', serif;
-          font-size: 1.1rem;
-          color: var(--green-dark);
-          font-weight: 700;
+          font-family: var(--font);
+          font-size: 1rem;
+          font-weight: 800;
+          color: var(--gold-lt);
           flex-shrink: 0;
+          letter-spacing: -0.5px;
         }
-        .nav-name {
-          font-family: 'DM Serif Display', serif;
-          font-size: 1.3rem;
-          color: var(--white);
-          letter-spacing: 0.02em;
+        .lp-nav-name {
+          font-size: 1.2rem;
+          font-weight: 800;
+          color: var(--green-dark);
+          letter-spacing: 0.01em;
         }
-        .nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-        .btn-nav-outline {
-          background: transparent;
-          color: rgba(255,255,255,0.8);
-          border: 1px solid rgba(255,255,255,0.25);
-          border-radius: 6px;
-          padding: 0.45rem 1.1rem;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.85rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.15s, color 0.15s;
-        }
-        .btn-nav-outline:hover { background: rgba(255,255,255,0.08); color: white; }
-        .btn-nav-primary {
+        .lp-nav-chip {
           background: var(--gold);
           color: var(--green-dark);
+          font-size: 0.55rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          padding: 2px 7px;
+          border-radius: 5px;
+          align-self: flex-start;
+          margin-top: 7px;
+          margin-left: 2px;
+        }
+        .lp-nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .btn-ghost {
+          background: transparent;
+          color: var(--green-dark);
+          border: 1.5px solid var(--border);
+          border-radius: 9px;
+          padding: 0.46rem 1.15rem;
+          font-family: var(--font);
+          font-size: 0.84rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .btn-ghost:hover { background: var(--green-light); border-color: var(--green); }
+        .btn-solid {
+          background: var(--green-dark);
+          color: #fff;
           border: none;
-          border-radius: 6px;
-          padding: 0.45rem 1.25rem;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.85rem;
+          border-radius: 9px;
+          padding: 0.46rem 1.25rem;
+          font-family: var(--font);
+          font-size: 0.84rem;
           font-weight: 700;
           cursor: pointer;
-          transition: opacity 0.15s;
+          transition: background 0.15s, transform 0.1s;
         }
-        .btn-nav-primary:hover { opacity: 0.88; }
+        .btn-solid:hover { background: var(--green); transform: translateY(-1px); }
 
         /* ── HERO ── */
-        .hero {
+        .lp-hero {
           background: var(--green-dark);
           position: relative;
           overflow: hidden;
-          padding: 6rem 3rem 5rem;
+          padding: 6rem 2.5rem 5rem;
           text-align: center;
         }
-        .hero::before {
-          content: 'LINURI';
+        .lp-hero-bg {
           position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-          font-family: 'DM Serif Display', serif;
-          font-size: 22vw;
-          color: rgba(255,255,255,0.025);
+          inset: 0;
           pointer-events: none;
-          user-select: none;
-          white-space: nowrap;
-          line-height: 1;
         }
-        .hero-eyebrow {
+        .lp-hero-bg::before {
+          content: '';
+          position: absolute;
+          width: 600px;
+          height: 600px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(240,165,0,0.08) 0%, transparent 70%);
+          top: -200px;
+          left: -100px;
+        }
+        .lp-hero-bg::after {
+          content: '';
+          position: absolute;
+          width: 400px;
+          height: 400px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+          bottom: -100px;
+          right: 5%;
+        }
+        .lp-hero-dots {
+          position: absolute;
+          inset: 0;
+          background-image:
+            radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
+          background-size: 28px 28px;
+          pointer-events: none;
+          mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+        }
+        .lp-eyebrow {
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          background: rgba(201,148,26,0.15);
-          border: 1px solid rgba(201,148,26,0.3);
+          gap: 8px;
+          background: rgba(240,165,0,0.12);
+          border: 1px solid rgba(240,165,0,0.28);
           color: var(--gold-lt);
-          font-size: 0.72rem;
-          font-weight: 600;
-          letter-spacing: 0.12em;
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
-          padding: 0.35rem 1rem;
-          border-radius: 99px;
+          padding: 0.38rem 1rem;
+          border-radius: 999px;
           margin-bottom: 1.75rem;
+          position: relative;
         }
-        .hero-dot {
-          width: 6px; height: 6px;
+        .lp-pulse {
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
           background: var(--gold);
-          display: inline-block;
+          animation: lp-pulse 2s ease-in-out infinite;
+          flex-shrink: 0;
         }
-        .hero h1 {
-          font-family: 'DM Serif Display', serif;
-          font-size: clamp(2.6rem, 6vw, 4.2rem);
-          color: var(--white);
+        @keyframes lp-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.5); opacity: 0.5; }
+        }
+        .lp-hero h1 {
+          font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+          font-weight: 800;
+          color: #fff;
           line-height: 1.1;
-          max-width: 760px;
+          max-width: 740px;
           margin: 0 auto 1.25rem;
+          letter-spacing: -0.02em;
+          position: relative;
         }
-        .hero h1 em {
+        .lp-hero h1 em {
           font-style: italic;
           color: var(--gold-lt);
         }
-        .hero-sub {
+        .lp-hero-sub {
           font-size: 1.05rem;
-          color: rgba(255,255,255,0.55);
-          font-weight: 300;
-          max-width: 520px;
+          color: rgba(255,255,255,0.58);
+          font-weight: 400;
+          max-width: 510px;
           margin: 0 auto 2.5rem;
-          line-height: 1.65;
+          line-height: 1.72;
+          position: relative;
         }
-        .hero-btns {
+        .lp-hero-btns {
           display: flex;
-          gap: 1rem;
+          gap: 12px;
           justify-content: center;
           flex-wrap: wrap;
-          margin-bottom: 3.5rem;
+          margin-bottom: 3rem;
+          position: relative;
         }
-        .btn-hero-primary {
+        .btn-hero-prim {
           background: var(--gold);
           color: var(--green-dark);
           border: none;
-          border-radius: 8px;
-          padding: 0.875rem 2rem;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.95rem;
-          font-weight: 700;
+          border-radius: 11px;
+          padding: 0.9rem 2.1rem;
+          font-family: var(--font);
+          font-size: 0.97rem;
+          font-weight: 800;
           cursor: pointer;
-          transition: opacity 0.15s, transform 0.1s;
+          transition: all 0.15s;
+          letter-spacing: -0.01em;
         }
-        .btn-hero-primary:hover { opacity: 0.88; transform: translateY(-1px); }
-        .btn-hero-outline {
-          background: transparent;
-          color: rgba(255,255,255,0.8);
-          border: 1.5px solid rgba(255,255,255,0.25);
-          border-radius: 8px;
-          padding: 0.875rem 2rem;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.95rem;
-          font-weight: 500;
+        .btn-hero-prim:hover {
+          background: var(--gold-lt);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(240,165,0,0.35);
+        }
+        .btn-hero-sec {
+          background: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.88);
+          border: 1.5px solid rgba(255,255,255,0.2);
+          border-radius: 11px;
+          padding: 0.9rem 2.1rem;
+          font-family: var(--font);
+          font-size: 0.97rem;
+          font-weight: 600;
           cursor: pointer;
-          transition: background 0.15s, color 0.15s;
+          transition: background 0.15s;
         }
-        .btn-hero-outline:hover { background: rgba(255,255,255,0.08); color: white; }
-
-        /* Hero badges */
-        .hero-badges {
+        .btn-hero-sec:hover { background: rgba(255,255,255,0.13); }
+        .lp-hero-badges {
           display: flex;
           justify-content: center;
-          gap: 1.5rem;
           flex-wrap: wrap;
+          gap: 18px;
+          position: relative;
         }
-        .hero-badge {
+        .lp-badge {
           display: flex;
           align-items: center;
-          gap: 0.4rem;
-          color: rgba(255,255,255,0.45);
-          font-size: 0.8rem;
-          font-weight: 400;
+          gap: 6px;
+          color: rgba(255,255,255,0.42);
+          font-size: 0.79rem;
+          font-weight: 500;
         }
-        .hero-badge-dot {
-          width: 5px; height: 5px;
+        .lp-badge-dot {
+          width: 5px;
+          height: 5px;
           border-radius: 50%;
           background: var(--gold);
           flex-shrink: 0;
         }
+
+        /* ── SUBJECT STRIP ── */
+        .lp-subjects {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+          padding: 2rem 2.5rem 0;
+        }
+        .lp-subj {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 0.55rem 1.25rem;
+          border-radius: 999px;
+          font-size: 0.88rem;
+          font-weight: 700;
+          border: 2px solid transparent;
+          transition: transform 0.15s;
+          cursor: default;
+        }
+        .lp-subj:hover { transform: translateY(-2px); }
+        .lp-subj-en { background: #eaf6ef; color: #0d3d20; border-color: #b8dfc8; }
+        .lp-subj-ma { background: var(--gold-bg); color: #7a5500; border-color: #f5d07a; }
+        .lp-subj-sc { background: #edf2ff; color: #2c4da0; border-color: #bcceff; }
 
         /* ── SCHOOL STRIP ── */
-        .school-strip {
-          background: var(--cream2);
-          border-top: 1px solid rgba(27,94,48,0.12);
-          border-bottom: 1px solid rgba(27,94,48,0.12);
-          padding: 1.25rem 3rem;
+        .lp-school {
+          background: var(--gold-bg);
+          border-top: 1px solid rgba(240,165,0,0.2);
+          border-bottom: 1px solid rgba(240,165,0,0.2);
+          padding: 14px 2.5rem;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 1rem;
+          gap: 12px;
           flex-wrap: wrap;
           text-align: center;
+          margin-top: 1.5rem;
         }
-        .school-strip-label {
-          font-size: 0.7rem;
-          font-weight: 600;
+        .lp-school-label {
+          font-size: 0.63rem;
+          font-weight: 700;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: var(--text-soft);
+          color: #b07800;
         }
-        .school-strip-name {
-          font-family: 'DM Serif Display', serif;
-          font-size: 1rem;
+        .lp-school-name {
+          font-size: 0.9rem;
+          font-weight: 700;
           color: var(--green-dark);
         }
-        .school-strip-divider {
-          width: 4px; height: 4px;
+        .lp-school-sep {
+          width: 5px;
+          height: 5px;
           border-radius: 50%;
           background: var(--gold);
           flex-shrink: 0;
         }
 
-        /* ── SECTIONS ── */
-        .section {
+        /* ── GENERIC SECTION ── */
+        .lp-section {
           max-width: 1080px;
           margin: 0 auto;
           padding: 5rem 2rem;
         }
-        .section-label {
-          font-size: 0.68rem;
-          font-weight: 600;
+        .lp-eyebrow-sm {
+          font-size: 0.63rem;
+          font-weight: 700;
           letter-spacing: 0.14em;
           text-transform: uppercase;
           color: var(--green);
-          margin-bottom: 0.6rem;
+          margin-bottom: 0.5rem;
         }
-        .section-title {
-          font-family: 'DM Serif Display', serif;
-          font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+        .lp-section-title {
+          font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+          font-weight: 800;
           color: var(--green-dark);
-          line-height: 1.15;
-          margin-bottom: 1rem;
+          line-height: 1.12;
+          margin-bottom: 0.9rem;
+          letter-spacing: -0.02em;
         }
-        .section-desc {
-          color: var(--text-soft);
-          font-size: 0.975rem;
-          line-height: 1.7;
-          max-width: 540px;
-          margin-bottom: 3rem;
+        .lp-section-desc {
+          color: var(--muted);
+          font-size: 0.97rem;
+          line-height: 1.72;
+          max-width: 520px;
+          margin-bottom: 2.75rem;
         }
 
-        /* ── FEATURE CARDS ── */
-        .feature-grid {
+        /* ── FEATURE GRID ── */
+        .lp-feat-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1.25rem;
+          grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+          gap: 14px;
         }
-        .feature-card {
+        .lp-feat {
           background: var(--white);
-          border: 1px solid rgba(27,94,48,0.1);
-          border-radius: 12px;
+          border: 1.5px solid var(--border);
+          border-radius: var(--r-lg);
           padding: 1.5rem 1.75rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          transition: border-color 0.2s, transform 0.15s;
+          transition: border-color 0.18s, transform 0.15s, box-shadow 0.15s;
         }
-        .feature-card:hover { border-color: rgba(27,94,48,0.3); transform: translateY(-2px); }
-        .feature-icon {
-          width: 40px; height: 40px;
-          border-radius: 8px;
+        .lp-feat:hover {
+          border-color: var(--green);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 28px rgba(26,122,64,0.09);
+        }
+        .lp-feat-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 11px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.1rem;
+          font-size: 1.2rem;
+          margin-bottom: 1rem;
           flex-shrink: 0;
         }
-        .feature-icon.green  { background: #e8f5ed; }
-        .feature-icon.gold   { background: #fdf8ee; }
-        .feature-icon.crimson{ background: #fdf0f0; }
-        .feature-card h3 {
-          font-family: 'DM Serif Display', serif;
-          font-size: 1.1rem;
+        .fi-g { background: #eaf6ef; }
+        .fi-y { background: var(--gold-bg); }
+        .fi-r { background: #fff0f0; }
+        .fi-b { background: #edf2ff; }
+        .fi-p { background: #f4eeff; }
+        .lp-feat h3 {
+          font-size: 1rem;
+          font-weight: 700;
           color: var(--green-dark);
+          margin-bottom: 0.4rem;
+          letter-spacing: -0.01em;
         }
-        .feature-card p {
-          font-size: 0.875rem;
-          color: var(--text-soft);
+        .lp-feat p {
+          font-size: 0.86rem;
+          color: var(--muted);
           line-height: 1.65;
         }
+        .lp-feat-tag {
+          display: inline-block;
+          margin-top: 0.8rem;
+          font-size: 0.62rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          padding: 3px 8px;
+          border-radius: 5px;
+        }
+        .tag-ai { background: #f4eeff; color: #6030c0; }
+        .tag-live { background: #eaf6ef; color: #0d5c28; }
+        .tag-warn { background: #fff0f0; color: #9b1c1c; }
 
         /* ── HOW IT WORKS ── */
-        .how-bg {
+        .lp-how-wrap {
           background: var(--green-dark);
           position: relative;
           overflow: hidden;
         }
-        .how-bg::before {
+        .lp-how-wrap::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 40px,
-            rgba(255,255,255,0.012) 40px,
-            rgba(255,255,255,0.012) 41px
-          );
+          background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+          background-size: 32px 32px;
           pointer-events: none;
+          mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 40%, transparent 100%);
         }
-        .how-section {
+        .lp-how {
           max-width: 1080px;
           margin: 0 auto;
           padding: 5rem 2rem;
+          position: relative;
         }
-        .how-section .section-label { color: var(--gold-lt); }
-        .how-section .section-title { color: var(--white); }
-        .how-section .section-desc  { color: rgba(255,255,255,0.5); }
-
-        .steps-grid {
+        .lp-how .lp-eyebrow-sm { color: rgba(240,165,0,0.75); }
+        .lp-how .lp-section-title { color: #fff; }
+        .lp-how .lp-section-desc { color: rgba(255,255,255,0.48); }
+        .lp-steps {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
+          gap: 14px;
         }
-        .step-card {
+        .lp-step {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.09);
-          border-radius: 12px;
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
+          border-radius: var(--r-lg);
+          padding: 1.5rem 1.6rem;
+          position: relative;
+          overflow: hidden;
+          transition: background 0.15s;
         }
-        .step-num {
-          font-family: 'DM Mono', monospace;
-          font-size: 0.7rem;
-          color: var(--gold-lt);
-          letter-spacing: 0.1em;
-          font-weight: 500;
+        .lp-step:hover { background: rgba(255,255,255,0.075); }
+        .lp-step-bg-num {
+          position: absolute;
+          right: -4px;
+          bottom: -16px;
+          font-size: 5.5rem;
+          font-weight: 800;
+          line-height: 1;
+          color: rgba(255,255,255,0.04);
+          pointer-events: none;
+          letter-spacing: -4px;
         }
-        .step-card h3 {
-          font-family: 'DM Serif Display', serif;
-          font-size: 1.05rem;
-          color: var(--white);
+        .lp-step-n {
+          font-size: 0.62rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: rgba(240,165,0,0.75);
+          margin-bottom: 0.55rem;
         }
-        .step-card p {
-          font-size: 0.85rem;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.6;
+        .lp-step h3 {
+          font-size: 0.97rem;
+          font-weight: 700;
+          color: #fff;
+          margin-bottom: 0.5rem;
+          letter-spacing: -0.01em;
+        }
+        .lp-step p {
+          font-size: 0.83rem;
+          color: rgba(255,255,255,0.46);
+          line-height: 1.62;
         }
 
         /* ── ROLES ── */
-        .roles-grid {
+        .lp-roles {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: 1.25rem;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 14px;
         }
-        .role-card {
+        .lp-role {
           background: var(--white);
-          border: 1px solid rgba(27,94,48,0.1);
-          border-radius: 12px;
+          border: 1.5px solid var(--border);
+          border-radius: var(--r-lg);
           overflow: hidden;
+          transition: transform 0.15s, box-shadow 0.15s;
         }
-        .role-card-header {
-          padding: 1.25rem 1.5rem 1rem;
-          border-bottom: 1px solid rgba(27,94,48,0.08);
+        .lp-role:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 28px rgba(26,122,64,0.09);
+        }
+        .lp-role-head {
+          padding: 1.2rem 1.5rem 1rem;
+          border-bottom: 1px solid var(--border);
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 11px;
         }
-        .role-avatar {
-          width: 38px; height: 38px;
-          border-radius: 8px;
+        .lp-role-av {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-family: 'DM Serif Display', serif;
-          font-size: 1rem;
-          font-weight: 700;
+          font-size: 1.15rem;
           flex-shrink: 0;
         }
-        .role-avatar.student { background: #e8f5ed; color: #0d3a1b; }
-        .role-avatar.teacher { background: #fdf8ee; color: #7a5a00; }
-        .role-avatar.admin   { background: #fdf0f0; color: #8b1a1a; }
-        .role-card-name {
-          font-weight: 600;
+        .av-s { background: #eaf6ef; }
+        .av-t { background: var(--gold-bg); }
+        .av-a { background: #fff0f0; }
+        .lp-role-title {
+          font-weight: 700;
           font-size: 0.95rem;
           color: var(--green-dark);
+          letter-spacing: -0.01em;
         }
-        .role-card-tag {
-          font-size: 0.65rem;
-          font-weight: 600;
-          letter-spacing: 0.08em;
+        .lp-role-sub {
+          font-size: 0.63rem;
           text-transform: uppercase;
-          color: var(--text-soft);
-          margin-top: 1px;
+          letter-spacing: 0.08em;
+          font-weight: 600;
+          color: var(--muted);
+          margin-top: 2px;
         }
-        .role-card-body {
+        .lp-role-body {
           padding: 1rem 1.5rem 1.25rem;
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 8px;
         }
-        .role-item {
+        .lp-role-item {
           display: flex;
           align-items: flex-start;
-          gap: 0.5rem;
-          font-size: 0.83rem;
-          color: var(--text-soft);
-          line-height: 1.4;
+          gap: 8px;
+          font-size: 0.84rem;
+          color: var(--muted);
+          line-height: 1.45;
         }
-        .role-bullet {
-          width: 5px; height: 5px;
+        .lp-role-dot {
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           background: var(--gold);
           flex-shrink: 0;
@@ -453,269 +578,258 @@ export default function LandingPage() {
         }
 
         /* ── MASTERY LEVELS ── */
-        .mastery-strip {
+        .lp-mastery-wrap {
           background: var(--cream2);
-          border-top: 1px solid rgba(27,94,48,0.1);
-          border-bottom: 1px solid rgba(27,94,48,0.1);
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
         }
-        .mastery-section {
+        .lp-mastery {
           max-width: 1080px;
           margin: 0 auto;
-          padding: 4rem 2rem;
+          padding: 4.5rem 2rem;
         }
-        .mastery-cards {
+        .lp-mastery-cards {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 1rem;
+          gap: 13px;
           margin-top: 2.5rem;
         }
-        .mastery-card {
-          border-radius: 10px;
-          padding: 1.25rem 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
+        .lp-mc {
+          border-radius: var(--r);
+          padding: 1.35rem 1.5rem;
+          transition: transform 0.15s;
+          cursor: default;
         }
-        .mastery-card.needs-help { background: #fdf0f0; border: 1.5px solid rgba(139,26,26,0.2); }
-        .mastery-card.developing { background: #fdf8ee; border: 1.5px solid rgba(201,148,26,0.25); }
-        .mastery-card.mastered   { background: #f0f7f2; border: 1.5px solid rgba(27,94,48,0.2); }
-        .mastery-card-title {
-          font-family: 'DM Serif Display', serif;
+        .lp-mc:hover { transform: translateY(-2px); }
+        .lp-mc-nh { background: #fff0f0; border: 2px solid rgba(155,28,28,0.14); }
+        .lp-mc-dv { background: var(--gold-bg); border: 2px solid rgba(200,130,0,0.18); }
+        .lp-mc-ms { background: #eaf6ef; border: 2px solid rgba(26,122,64,0.18); }
+        .lp-mc-icon { font-size: 1.4rem; margin-bottom: 0.55rem; display: block; }
+        .lp-mc-title {
           font-size: 1rem;
+          font-weight: 700;
+          margin-bottom: 0.45rem;
+          letter-spacing: -0.01em;
         }
-        .mastery-card.needs-help .mastery-card-title { color: #8b1a1a; }
-        .mastery-card.developing .mastery-card-title { color: #7a5a00; }
-        .mastery-card.mastered   .mastery-card-title { color: #0d3a1b; }
-        .mastery-card p {
-          font-size: 0.82rem;
-          color: var(--text-soft);
-          line-height: 1.55;
+        .lp-mc-nh .lp-mc-title { color: #8b1a1a; }
+        .lp-mc-dv .lp-mc-title { color: #7a5500; }
+        .lp-mc-ms .lp-mc-title { color: #0d3d20; }
+        .lp-mc p {
+          font-size: 0.83rem;
+          color: var(--muted);
+          line-height: 1.62;
         }
 
         /* ── CTA ── */
-        .cta-section {
+        .lp-cta {
           background: var(--green-dark);
           text-align: center;
-          padding: 6rem 2rem;
+          padding: 5.5rem 2rem;
           position: relative;
           overflow: hidden;
         }
-        .cta-section::after {
+        .lp-cta::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 60% 60% at 50% 100%, rgba(201,148,26,0.08) 0%, transparent 70%);
+          background: radial-gradient(ellipse 70% 60% at 50% 110%, rgba(240,165,0,0.08) 0%, transparent 70%);
           pointer-events: none;
         }
-        .cta-section h2 {
-          font-family: 'DM Serif Display', serif;
-          font-size: clamp(1.8rem, 4vw, 2.8rem);
-          color: var(--white);
-          max-width: 600px;
+        .lp-cta h2 {
+          font-size: clamp(1.9rem, 3.8vw, 2.8rem);
+          font-weight: 800;
+          color: #fff;
+          max-width: 580px;
           margin: 0 auto 1rem;
-          line-height: 1.15;
+          line-height: 1.12;
+          letter-spacing: -0.02em;
+          position: relative;
         }
-        .cta-section p {
+        .lp-cta p {
           color: rgba(255,255,255,0.5);
-          font-size: 0.975rem;
+          font-size: 0.98rem;
           margin-bottom: 2.5rem;
-          max-width: 460px;
+          max-width: 440px;
           margin-left: auto;
           margin-right: auto;
-          line-height: 1.65;
+          line-height: 1.7;
+          position: relative;
         }
-        .cta-btns {
+        .lp-cta-btns {
           display: flex;
-          gap: 1rem;
+          gap: 12px;
           justify-content: center;
           flex-wrap: wrap;
+          position: relative;
         }
 
         /* ── FOOTER ── */
-        .footer {
-          background: #060f08;
+        .lp-footer {
+          background: #060d09;
           border-top: 1px solid rgba(255,255,255,0.06);
-          padding: 2.5rem 3rem;
+          padding: 2.25rem 2.5rem;
           display: flex;
           align-items: center;
           justify-content: space-between;
           flex-wrap: wrap;
           gap: 1rem;
         }
-        .footer-brand {
+        .lp-footer-brand {
           display: flex;
           align-items: center;
-          gap: 0.6rem;
+          gap: 9px;
         }
-        .footer-logo {
-          width: 28px; height: 28px;
+        .lp-footer-mark {
+          width: 28px;
+          height: 28px;
           background: var(--gold);
-          border-radius: 5px;
+          border-radius: 6px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-family: 'DM Serif Display', serif;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
+          font-weight: 800;
           color: var(--green-dark);
-          font-weight: 700;
           flex-shrink: 0;
         }
-        .footer-name {
-          font-family: 'DM Serif Display', serif;
-          font-size: 1rem;
-          color: rgba(255,255,255,0.6);
+        .lp-footer-name {
+          font-size: 0.98rem;
+          font-weight: 700;
+          color: rgba(255,255,255,0.55);
         }
-        .footer-meta {
-          font-size: 0.75rem;
-          color: rgba(255,255,255,0.25);
+        .lp-footer-meta {
+          font-size: 0.72rem;
+          color: rgba(255,255,255,0.24);
           text-align: right;
-          line-height: 1.7;
+          line-height: 1.8;
         }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 640px) {
-          .nav { padding: 0 1.25rem; }
-          .hero { padding: 4rem 1.25rem 3.5rem; }
-          .school-strip { padding: 1rem 1.25rem; }
-          .section { padding: 3.5rem 1.25rem; }
-          .how-section { padding: 3.5rem 1.25rem; }
-          .footer { padding: 2rem 1.25rem; flex-direction: column; align-items: flex-start; }
-          .footer-meta { text-align: left; }
+          .lp-nav { padding: 0 1.25rem; }
+          .btn-ghost { display: none; }
+          .lp-hero { padding: 3.5rem 1.25rem 3rem; }
+          .lp-subjects { padding: 1.75rem 1.25rem 0; }
+          .lp-school { padding: 1rem 1.25rem; }
+          .lp-section { padding: 3.5rem 1.25rem; }
+          .lp-how { padding: 3.5rem 1.25rem; }
+          .lp-mastery { padding: 3rem 1.25rem; }
+          .lp-footer { padding: 1.75rem 1.25rem; flex-direction: column; align-items: flex-start; }
+          .lp-footer-meta { text-align: left; }
         }
       `}</style>
 
-      <div className="landing">
+      <div className="lp">
 
         {/* ── NAV ── */}
-        <nav className="nav">
-          <div className="nav-brand">
-            <div className="nav-logo-box">L</div>
-            <span className="nav-name">LINURI</span>
+        <nav className="lp-nav">
+          <div className="lp-nav-brand">
+            <div className="lp-nav-mark">L</div>
+            <span className="lp-nav-name">LINURI</span>
+            <span className="lp-nav-chip">Grade 6</span>
           </div>
-          <div className="nav-actions">
-            <button className="btn-nav-outline" onClick={() => router.push('/login')}>
-              Log in
-            </button>
-            <button className="btn-nav-primary" onClick={() => router.push('/register')}>
-              Get Started
-            </button>
+          <div className="lp-nav-actions">
+            <button className="btn-ghost" onClick={() => router.push('/login')}>Log in</button>
+            <button className="btn-solid" onClick={() => router.push('/register')}>Get Started →</button>
           </div>
         </nav>
 
         {/* ── HERO ── */}
-        <section className="hero">
-          <div className="hero-eyebrow">
-            <span className="hero-dot" />
-            AI-Integrated Adaptive Learning System
-          </div>
-          <h1>
-            Every student learns at their <em>own pace.</em>
-          </h1>
-          <p className="hero-sub">
-            LINURI tracks mastery in English, Mathematics, and Science for Grade 6 students — then adapts the difficulty so no one is left behind.
-          </p>
-          <div className="hero-btns">
-            <button className="btn-hero-primary" onClick={() => router.push('/register')}>
-              Start Learning Free
-            </button>
-            <button className="btn-hero-outline" onClick={() => router.push('/login')}>
-              I already have an account
-            </button>
-          </div>
-          <div className="hero-badges">
-            {[
-              'Grade 6 Curriculum',
-              'Real-Time Mastery Tracking',
-              'Gemini AI-Powered Hints',
-              'Caloocan City',
-            ].map(b => (
-              <span key={b} className="hero-badge">
-                <span className="hero-badge-dot" />
-                {b}
-              </span>
-            ))}
+        <section className="lp-hero">
+          <div className="lp-hero-bg" />
+          <div className="lp-hero-dots" />
+          <div style={{ position: 'relative' }}>
+            <div className="lp-eyebrow">
+              <span className="lp-pulse" />
+              AI-Integrated Adaptive Learning System
+            </div>
+            <h1>
+              Every student learns at their <em>own pace.</em>
+            </h1>
+            <p className="lp-hero-sub">
+              LINURI tracks mastery in English, Mathematics, and Science for Grade 6 students — then adapts the difficulty so no one is left behind.
+            </p>
+            <div className="lp-hero-btns">
+              <button className="btn-hero-prim" onClick={() => router.push('/register')}>
+                ✦ Start Learning Free
+              </button>
+              <button className="btn-hero-sec" onClick={() => router.push('/login')}>
+                I already have an account
+              </button>
+            </div>
+            <div className="lp-hero-badges">
+              {['Grade 6 Curriculum', 'Real-Time Mastery Tracking', 'Gemini AI-Powered Hints', 'Caloocan City'].map(b => (
+                <span key={b} className="lp-badge">
+                  <span className="lp-badge-dot" />
+                  {b}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
+        {/* ── SUBJECT CHIPS ── */}
+        <div className="lp-subjects">
+          <div className="lp-subj lp-subj-en">📖 English</div>
+          <div className="lp-subj lp-subj-ma">🔢 Mathematics</div>
+          <div className="lp-subj lp-subj-sc">🔬 Science</div>
+        </div>
+
         {/* ── SCHOOL STRIP ── */}
-        <div className="school-strip">
-          <span className="school-strip-label">Developed for</span>
-          <span className="school-strip-divider" />
-          <span className="school-strip-name">
-            United Methodist Cooperative Learning System, Inc.
-          </span>
-          <span className="school-strip-divider" />
-          <span className="school-strip-label">Caloocan City </span>
+        <div className="lp-school">
+          <span className="lp-school-label">Developed for</span>
+          <span className="lp-school-sep" />
+          <span className="lp-school-name">United Methodist Cooperative Learning System, Inc.</span>
+          <span className="lp-school-sep" />
+          <span className="lp-school-label">Caloocan City · Immaculada Concepcion College of Soldiers Hills</span>
         </div>
 
         {/* ── FEATURES ── */}
-        <div className="section">
-          <div className="section-label">What LINURI Does</div>
-          <h2 className="section-title">Smarter learning,<br />powered by AI</h2>
-          <p className="section-desc">
+        <div className="lp-section">
+          <div className="lp-eyebrow-sm">What LINURI Does</div>
+          <h2 className="lp-section-title">Smarter learning,<br />powered by AI</h2>
+          <p className="lp-section-desc">
             LINURI combines a decision-tree classifier with Google Gemini to give every student a personalized learning path — automatically.
           </p>
-          <div className="feature-grid">
+          <div className="lp-feat-grid">
             {[
-              {
-                icon: '🎯', color: 'green',
-                title: 'Adaptive Difficulty',
-                desc: 'After every quiz, LINURI adjusts the difficulty level — Basic, Standard, or Advanced — based on the student\'s mastery score.',
-              },
-              {
-                icon: '💡', color: 'gold',
-                title: 'AI-Generated Hints',
-                desc: 'When a student is stuck, Gemini AI generates a context-aware hint for the question — no generic answers.',
-              },
-              {
-                icon: '📊', color: 'green',
-                title: 'Mastery Tracking',
-                desc: 'Every quiz attempt is saved. Teachers and admins can see which students are Mastered, Developing, or Needs Help at a glance.',
-              },
-              {
-                icon: '🚩', color: 'crimson',
-                title: 'Regression Alerts',
-                desc: 'Students who regress two or more times on a skill are automatically flagged so teachers can intervene early.',
-              },
-              {
-                icon: '📝', color: 'gold',
-                title: 'Teacher Lesson Builder',
-                desc: 'Teachers input a lesson topic and LINURI auto-generates multiple-choice questions using Gemini — ready for review and publish.',
-              },
-              {
-                icon: '🏫', color: 'green',
-                title: 'Class Management',
-                desc: 'Create class sections with auto-generated join codes. Students enrol instantly — no manual setup needed.',
-              },
+              { icon: '🎯', color: 'fi-g', title: 'Adaptive Difficulty', tag: 'tag-live', tagLabel: 'Auto-adjusts', desc: "After every quiz, LINURI adjusts the difficulty level — Basic, Standard, or Advanced — based on the student's mastery score." },
+              { icon: '💡', color: 'fi-y', title: 'AI-Generated Hints', tag: 'tag-ai', tagLabel: 'Gemini AI', desc: 'When a student is stuck, Gemini AI generates a context-aware hint for the question — no generic answers.' },
+              { icon: '📊', color: 'fi-b', title: 'Mastery Tracking', tag: 'tag-live', tagLabel: 'Live Data', desc: 'Every quiz attempt is saved. Teachers and admins can see who is Mastered, Developing, or Needs Help at a glance.' },
+              { icon: '🚩', color: 'fi-r', title: 'Regression Alerts', tag: 'tag-warn', tagLabel: 'Early Warning', desc: 'Students who regress two or more times on a skill are automatically flagged so teachers can intervene early.' },
+              { icon: '📝', color: 'fi-y', title: 'Teacher Lesson Builder', tag: 'tag-ai', tagLabel: 'Gemini AI', desc: 'Teachers input a lesson topic and LINURI auto-generates multiple-choice questions using Gemini — ready to review and publish.' },
+              { icon: '🏫', color: 'fi-g', title: 'Class Management', tag: 'tag-live', tagLabel: 'Simple Setup', desc: 'Create class sections with auto-generated join codes. Students enrol instantly — no manual setup needed.' },
             ].map(f => (
-              <div key={f.title} className="feature-card">
-                <div className={`feature-icon ${f.color}`}>{f.icon}</div>
+              <div key={f.title} className="lp-feat">
+                <div className={`lp-feat-icon ${f.color}`}>{f.icon}</div>
                 <h3>{f.title}</h3>
                 <p>{f.desc}</p>
+                <span className={`lp-feat-tag ${f.tag}`}>{f.tagLabel}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── HOW IT WORKS ── */}
-        <div className="how-bg">
-          <div className="how-section">
-            <div className="section-label">How It Works</div>
-            <h2 className="section-title">From lesson to mastery<br />in four steps</h2>
-            <p className="section-desc">
+        <div className="lp-how-wrap">
+          <div className="lp-how">
+            <div className="lp-eyebrow-sm">How It Works</div>
+            <h2 className="lp-section-title">From lesson to mastery<br />in four steps</h2>
+            <p className="lp-section-desc">
               The adaptive loop keeps running until every student reaches mastery.
             </p>
-            <div className="steps-grid">
+            <div className="lp-steps">
               {[
                 { n: '01', title: 'Teacher creates a lesson', desc: 'Enter a topic, subject, and difficulty. Gemini generates 10 multiple-choice questions automatically.' },
                 { n: '02', title: 'Student takes the quiz', desc: 'Each question has a 60-second timer. Hints are available when time runs out or when the student asks.' },
-                { n: '03', title: 'Classifier scores mastery', desc: 'The decision-tree classifier analyses accuracy and assigns a mastery level: Needs Help, Developing, or Mastered.' },
-                { n: '04', title: 'Adaptive router recommends next step', desc: 'Based on mastery, the system routes the student to the right difficulty level for the next quiz.' },
-              ].map(step => (
-                <div key={step.n} className="step-card">
-                  <div className="step-num">STEP {step.n}</div>
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
+                { n: '03', title: 'Classifier scores mastery', desc: 'The decision-tree analyses accuracy and assigns a mastery level: Needs Help, Developing, or Mastered.' },
+                { n: '04', title: 'Adaptive router picks next step', desc: 'Based on mastery, the system routes the student to the right difficulty level for the next quiz.' },
+              ].map(s => (
+                <div key={s.n} className="lp-step">
+                  <div className="lp-step-bg-num">{s.n}</div>
+                  <div className="lp-step-n">Step {s.n}</div>
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
                 </div>
               ))}
             </div>
@@ -723,57 +837,39 @@ export default function LandingPage() {
         </div>
 
         {/* ── ROLES ── */}
-        <div className="section">
-          <div className="section-label">User Roles</div>
-          <h2 className="section-title">Built for everyone<br />in the classroom</h2>
-          <p className="section-desc">
+        <div className="lp-section">
+          <div className="lp-eyebrow-sm">User Roles</div>
+          <h2 className="lp-section-title">Built for everyone<br />in the classroom</h2>
+          <p className="lp-section-desc">
             LINURI has three distinct roles, each with their own dashboard and tools.
           </p>
-          <div className="roles-grid">
+          <div className="lp-roles">
             {[
               {
-                role: 'student', initial: 'S', tag: 'Self-register',
-                name: 'Student',
-                items: [
-                  'Take adaptive quizzes in English, Math, and Science',
-                  'Get AI-powered hints when stuck',
-                  'Track personal mastery progress over time',
-                  'Enrol in class with a join code',
-                ],
+                av: 'av-s', icon: '👦', role: 'Student', sub: 'Self-register',
+                items: ['Take adaptive quizzes in English, Math, and Science', 'Get AI-powered hints when stuck', 'Track personal mastery progress over time', 'Enrol in class with a join code'],
               },
               {
-                role: 'teacher', initial: 'T', tag: 'Self-register',
-                name: 'Teacher',
-                items: [
-                  'Create class sections with join codes',
-                  'Generate lessons and questions via Gemini AI',
-                  'Review and approve questions before publishing',
-                  'Monitor class mastery and flagged students',
-                ],
+                av: 'av-t', icon: '👩‍🏫', role: 'Teacher', sub: 'Self-register',
+                items: ['Create class sections with join codes', 'Generate lessons and questions via Gemini AI', 'Review and approve questions before publishing', 'Monitor class mastery and flagged students'],
               },
               {
-                role: 'admin', initial: 'A', tag: 'Manually created',
-                name: 'Admin',
-                items: [
-                  'View all users, classes, and mastery records',
-                  'Access school-wide mastery report by subject',
-                  'Print reports directly from the dashboard',
-                  'Oversee the entire LINURI system',
-                ],
+                av: 'av-a', icon: '🏛', role: 'Admin', sub: 'Manually created',
+                items: ['View all users, classes, and mastery records', 'Access school-wide mastery report by subject', 'Print reports directly from the dashboard', 'Oversee the entire LINURI system'],
               },
             ].map(r => (
-              <div key={r.role} className="role-card">
-                <div className="role-card-header">
-                  <div className={`role-avatar ${r.role}`}>{r.initial}</div>
+              <div key={r.role} className="lp-role">
+                <div className="lp-role-head">
+                  <div className={`lp-role-av ${r.av}`}>{r.icon}</div>
                   <div>
-                    <div className="role-card-name">{r.name}</div>
-                    <div className="role-card-tag">{r.tag}</div>
+                    <div className="lp-role-title">{r.role}</div>
+                    <div className="lp-role-sub">{r.sub}</div>
                   </div>
                 </div>
-                <div className="role-card-body">
+                <div className="lp-role-body">
                   {r.items.map(item => (
-                    <div key={item} className="role-item">
-                      <span className="role-bullet" />
+                    <div key={item} className="lp-role-item">
+                      <span className="lp-role-dot" />
                       {item}
                     </div>
                   ))}
@@ -784,30 +880,19 @@ export default function LandingPage() {
         </div>
 
         {/* ── MASTERY LEVELS ── */}
-        <div className="mastery-strip">
-          <div className="mastery-section">
-            <div className="section-label">Mastery Framework</div>
-            <h2 className="section-title">Three levels. One goal: Mastery.</h2>
-            <div className="mastery-cards">
+        <div className="lp-mastery-wrap">
+          <div className="lp-mastery">
+            <div className="lp-eyebrow-sm">Mastery Framework</div>
+            <h2 className="lp-section-title">Three levels. One goal: Mastery.</h2>
+            <div className="lp-mastery-cards">
               {[
-                {
-                  cls: 'needs-help',
-                  title: '▲ Needs Help',
-                  desc: 'The student scored below the threshold. LINURI steps down to Basic difficulty and encourages re-attempt with hints enabled.',
-                },
-                {
-                  cls: 'developing',
-                  title: '◆ Developing',
-                  desc: 'The student is on track but not yet consistent. LINURI keeps difficulty at Standard and monitors for regression.',
-                },
-                {
-                  cls: 'mastered',
-                  title: '★ Mastered',
-                  desc: 'The student has demonstrated consistent accuracy. LINURI advances them to Advanced difficulty for continued growth.',
-                },
+                { cls: 'lp-mc-nh', icon: '📌', title: 'Needs Help', desc: 'The student scored below the threshold. LINURI steps down to Basic difficulty and encourages re-attempt with hints enabled.' },
+                { cls: 'lp-mc-dv', icon: '📈', title: 'Developing', desc: 'The student is on track but not yet consistent. LINURI keeps difficulty at Standard and monitors for regression.' },
+                { cls: 'lp-mc-ms', icon: '🌟', title: 'Mastered', desc: 'The student has demonstrated consistent accuracy. LINURI advances them to Advanced difficulty for continued growth.' },
               ].map(m => (
-                <div key={m.cls} className={`mastery-card ${m.cls}`}>
-                  <div className="mastery-card-title">{m.title}</div>
+                <div key={m.cls} className={`lp-mc ${m.cls}`}>
+                  <span className="lp-mc-icon">{m.icon}</span>
+                  <div className="lp-mc-title">{m.title}</div>
                   <p>{m.desc}</p>
                 </div>
               ))}
@@ -816,31 +901,31 @@ export default function LandingPage() {
         </div>
 
         {/* ── CTA ── */}
-        <div className="cta-section">
+        <div className="lp-cta">
           <h2>Ready to start your<br />adaptive learning journey?</h2>
           <p>
             Join the students and teachers of United Methodist Cooperative Learning System, Inc. already using LINURI.
           </p>
-          <div className="cta-btns">
-            <button className="btn-hero-primary" onClick={() => router.push('/register')}>
-              Create an Account
+          <div className="lp-cta-btns">
+            <button className="btn-hero-prim" onClick={() => router.push('/register')}>
+              ✦ Create an Account
             </button>
-            <button className="btn-hero-outline" onClick={() => router.push('/login')}>
+            <button className="btn-hero-sec" onClick={() => router.push('/login')}>
               Log in
             </button>
           </div>
         </div>
 
         {/* ── FOOTER ── */}
-        <footer className="footer">
-          <div className="footer-brand">
-            <div className="footer-logo">L</div>
-            <span className="footer-name">LINURI</span>
+        <footer className="lp-footer">
+          <div className="lp-footer-brand">
+            <div className="lp-footer-mark">L</div>
+            <span className="lp-footer-name">LINURI</span>
           </div>
-          <div className="footer-meta">
+          <div className="lp-footer-meta">
             Literacy and Numeracy Readiness Indicator<br />
             United Methodist Cooperative Learning System, Inc. · Caloocan City<br />
-             · Immaculada Concepcion College of Soldiers Hills
+            Immaculada Concepcion College of Soldiers Hills
           </div>
         </footer>
 

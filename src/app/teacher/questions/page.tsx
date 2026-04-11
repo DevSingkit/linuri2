@@ -34,23 +34,23 @@ interface EditState {
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Basic', 'Standard', 'Advanced']
 
-const DIFF_COLOR: Record<Difficulty, { bg: string; text: string; border: string }> = {
-  Basic:    { bg: '#f0f7f2', text: '#1b5e30', border: '#1b5e30' },
-  Standard: { bg: '#fdf8ee', text: '#7a5a00', border: '#c9941a' },
-  Advanced: { bg: '#fdf0f0', text: '#8b1a1a', border: '#8b1a1a' },
+const DIFF_STYLE: Record<Difficulty, { bg: string; text: string; border: string; accent: string }> = {
+  Basic:    { bg: '#eaf6ef', text: '#0d3d20', border: 'rgba(26,122,64,0.25)',   accent: '#1a7a40' },
+  Standard: { bg: '#fffbf0', text: '#7a5500', border: 'rgba(200,130,0,0.25)',   accent: '#f0a500' },
+  Advanced: { bg: '#fff5f5', text: '#8b1a1a', border: 'rgba(139,26,26,0.22)',   accent: '#c0392b' },
 }
 
 function QuestionsInner() {
   const searchParams = useSearchParams()
   const lessonId = searchParams.get('lesson_id') ?? ''
 
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [loading, setLoading] = useState(true)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editState, setEditState] = useState<EditState | null>(null)
+  const [questions, setQuestions]         = useState<Question[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [editingId, setEditingId]         = useState<string | null>(null)
+  const [editState, setEditState]         = useState<EditState | null>(null)
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null)
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [error, setError] = useState('')
+  const [savingId, setSavingId]           = useState<string | null>(null)
+  const [error, setError]                 = useState('')
 
   useEffect(() => {
     if (!lessonId) { setLoading(false); return }
@@ -70,40 +70,26 @@ function QuestionsInner() {
     setLoading(false)
   }
 
-  // ── Approve ──────────────────────────────────────────────
   const handleApprove = async (q: Question) => {
     setSavingId(q.id)
-    const { error } = await supabase
-      .from('questions')
-      .update({ is_approved: true })
-      .eq('id', q.id)
-    if (!error) {
-      setQuestions(prev => prev.map(x => x.id === q.id ? { ...x, is_approved: true } : x))
-    }
+    const { error } = await supabase.from('questions').update({ is_approved: true }).eq('id', q.id)
+    if (!error) setQuestions(prev => prev.map(x => x.id === q.id ? { ...x, is_approved: true } : x))
     setSavingId(null)
   }
 
-  // ── Unapprove ────────────────────────────────────────────
   const handleUnapprove = async (q: Question) => {
     setSavingId(q.id)
-    const { error } = await supabase
-      .from('questions')
-      .update({ is_approved: false })
-      .eq('id', q.id)
-    if (!error) {
-      setQuestions(prev => prev.map(x => x.id === q.id ? { ...x, is_approved: false } : x))
-    }
+    const { error } = await supabase.from('questions').update({ is_approved: false }).eq('id', q.id)
+    if (!error) setQuestions(prev => prev.map(x => x.id === q.id ? { ...x, is_approved: false } : x))
     setSavingId(null)
   }
 
-  // ── Delete ───────────────────────────────────────────────
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this question? This cannot be undone.')) return
     const { error } = await supabase.from('questions').delete().eq('id', id)
     if (!error) setQuestions(prev => prev.filter(x => x.id !== id))
   }
 
-  // ── Edit ─────────────────────────────────────────────────
   const startEdit = (q: Question) => {
     setEditingId(q.id)
     setEditState({
@@ -125,16 +111,13 @@ function QuestionsInner() {
       .update({ ...editState, is_approved: false })
       .eq('id', id)
     if (!error) {
-      setQuestions(prev => prev.map(x =>
-        x.id === id ? { ...x, ...editState, is_approved: false } : x
-      ))
+      setQuestions(prev => prev.map(x => x.id === id ? { ...x, ...editState, is_approved: false } : x))
       setEditingId(null)
       setEditState(null)
     }
     setSavingId(null)
   }
 
-  // ── Regenerate hint ──────────────────────────────────────
   const handleRegenerateHint = async (q: Question) => {
     setRegeneratingId(q.id)
     try {
@@ -161,17 +144,11 @@ function QuestionsInner() {
     setRegeneratingId(null)
   }
 
-  // ── Approve all ──────────────────────────────────────────
   const handleApproveAll = async () => {
     const ids = questions.filter(q => !q.is_approved).map(q => q.id)
     if (ids.length === 0) return
-    const { error } = await supabase
-      .from('questions')
-      .update({ is_approved: true })
-      .in('id', ids)
-    if (!error) {
-      setQuestions(prev => prev.map(x => ({ ...x, is_approved: true })))
-    }
+    const { error } = await supabase.from('questions').update({ is_approved: true }).in('id', ids)
+    if (!error) setQuestions(prev => prev.map(x => ({ ...x, is_approved: true })))
   }
 
   const grouped = DIFFICULTY_ORDER.reduce<Record<Difficulty, Question[]>>(
@@ -180,214 +157,323 @@ function QuestionsInner() {
   )
 
   const approvedCount = questions.filter(q => q.is_approved).length
-  const totalCount = questions.length
+  const totalCount    = questions.length
 
   return (
     <AppLayout title="Question Review">
-      <div style={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        :root {
+          --green:       #1a7a40;
+          --green-dark:  #0d3d20;
+          --green-mid:   #1f6b38;
+          --green-light: #eaf6ef;
+          --gold:        #f0a500;
+          --gold-lt:     #ffd166;
+          --gold-bg:     #fffbf0;
+          --cream:       #fdfaf5;
+          --cream2:      #f5efe3;
+          --text:        #1a1f16;
+          --muted:       #6b7280;
+          --border:      rgba(26,122,64,0.13);
+        }
+        .qr-input:focus, .qr-textarea:focus, .qr-select:focus {
+          outline: none;
+          border-color: var(--green);
+          box-shadow: 0 0 0 3px rgba(26,122,64,0.1);
+        }
+        .qr-action-btn:hover:not(:disabled)   { background: var(--cream2) !important; }
+        .qr-approve-btn:hover:not(:disabled)  { background: var(--green-mid) !important; }
+        .qr-delete-btn:hover:not(:disabled)   { background: #fff5f5 !important; color: #8b1a1a !important; }
+        .qr-save-btn:hover:not(:disabled)     { background: var(--green-mid) !important; }
+        .qr-approve-all:hover:not(:disabled)  { background: var(--green-mid) !important; }
+        .qr-card { transition: box-shadow 0.15s; }
+        .qr-card:hover { box-shadow: 0 2px 12px rgba(26,122,64,0.08); }
+      `}</style>
+
+      <div style={s.page}>
 
         {/* Page header */}
-        <div style={styles.pageHeader}>
+        <div style={s.pageHeader}>
           <div>
-            <h2 style={styles.pageTitle}>Review generated questions</h2>
-            <p style={styles.pageDesc}>
-              Edit, regenerate hints, then approve questions before publishing the lesson.
+            <h1 style={s.pageTitle}>Review generated questions</h1>
+            <p style={s.pageDesc}>
+              Edit or regenerate hints, then approve questions before publishing the lesson.
               Editing a question resets its approval status.
             </p>
           </div>
-          <div style={styles.headerActions}>
-            <div style={styles.progressPill}>
-              {approvedCount} / {totalCount} approved
+          <div style={s.headerActions}>
+            <div style={{
+              ...s.progressPill,
+              background: approvedCount === totalCount && totalCount > 0 ? 'var(--green-light)' : 'var(--cream2)',
+              color:      approvedCount === totalCount && totalCount > 0 ? 'var(--green-dark)' : 'var(--muted)',
+              border:     `1.5px solid ${approvedCount === totalCount && totalCount > 0 ? 'rgba(26,122,64,0.25)' : 'var(--border)'}`,
+            }}>
+              {approvedCount === totalCount && totalCount > 0 ? '✓ ' : ''}{approvedCount} / {totalCount} approved
             </div>
-            {approvedCount < totalCount && (
-              <button onClick={handleApproveAll} style={styles.approveAllBtn}>
+            {approvedCount < totalCount && totalCount > 0 && (
+              <button
+                className="qr-approve-all"
+                onClick={handleApproveAll}
+                style={s.approveAllBtn}
+              >
                 Approve all
               </button>
             )}
           </div>
         </div>
 
-        {error && <div style={styles.errorBox}>{error}</div>}
-
-        {!lessonId && (
-          <div style={styles.emptyState}>
-            No lesson selected. Go to{' '}
-            <a href="/teacher/lessons/new" style={{ color: '#1b5e30', fontWeight: 600 }}>
-              New Lesson
-            </a>{' '}
-            to generate questions.
+        {error && (
+          <div style={s.errorBox}>
+            <span style={{ fontWeight: 700 }}>⚠</span> {error}
           </div>
         )}
 
-        {loading && <div style={styles.loadingText}>Loading questions…</div>}
+        {!lessonId && (
+          <div style={s.emptyState}>
+            <p style={{ fontWeight: 700, color: 'var(--green-dark)', marginBottom: '0.35rem' }}>No lesson selected</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+              Go to{' '}
+              <a href="/teacher/lessons/new" style={{ color: 'var(--green)', fontWeight: 600 }}>
+                New Lesson
+              </a>{' '}
+              to generate questions.
+            </p>
+          </div>
+        )}
 
-        {!loading && lessonId && DIFFICULTY_ORDER.map(diff => (
-          <div key={diff} style={styles.group}>
-            {/* Difficulty heading */}
-            <div style={styles.groupHeader}>
-              <span style={{
-                ...styles.diffBadge,
-                background: DIFF_COLOR[diff].bg,
-                color:      DIFF_COLOR[diff].text,
-                border:     `1px solid ${DIFF_COLOR[diff].border}`,
-              }}>
-                {diff}
-              </span>
-              <span style={styles.groupCount}>
-                {grouped[diff].filter(q => q.is_approved).length} / {grouped[diff].length} approved
-              </span>
-            </div>
+        {loading && (
+          <div style={s.loadingWrap}>
+            <div style={s.spinner} />
+            <span style={{ fontSize: '0.875rem', color: 'var(--muted)' }}>Loading questions…</span>
+          </div>
+        )}
 
-            {grouped[diff].length === 0 && (
-              <div style={styles.emptyGroup}>No {diff} questions found.</div>
-            )}
+        {!loading && lessonId && DIFFICULTY_ORDER.map(diff => {
+          const dc = DIFF_STYLE[diff]
+          const groupApproved = grouped[diff].filter(q => q.is_approved).length
+          return (
+            <div key={diff} style={s.group}>
 
-            {grouped[diff].map((q, idx) => {
-              const isEditing = editingId === q.id
-              const isSaving  = savingId === q.id
-              const isRegen   = regeneratingId === q.id
-
-              return (
-                <div key={q.id} style={{
-                  ...styles.card,
-                  borderLeft: `3px solid ${q.is_approved ? '#1b5e30' : DIFF_COLOR[diff].border}`,
-                  opacity: isSaving ? 0.7 : 1,
-                }}>
-                  {/* Card header */}
-                  <div style={styles.cardTop}>
-                    <span style={styles.qNum}>Q{idx + 1}</span>
-                    {q.is_approved && (
-                      <span style={styles.approvedBadge}>✓ Approved</span>
-                    )}
-                  </div>
-
-                  {isEditing && editState ? (
-                    /* ── EDIT MODE ── */
-                    <div>
-                      <div style={styles.field}>
-                        <label style={styles.label}>Question</label>
-                        <textarea
-                          rows={3}
-                          value={editState.question_text}
-                          onChange={e => setEditState(s => s ? { ...s, question_text: e.target.value } : s)}
-                          style={styles.textarea}
-                        />
-                      </div>
-                      {(['a', 'b', 'c', 'd'] as const).map(opt => (
-                        <div key={opt} style={styles.field}>
-                          <label style={styles.label}>Option {opt.toUpperCase()}</label>
-                          <input
-                            type="text"
-                            value={editState[`option_${opt}`]}
-                            onChange={e => setEditState(s => s ? { ...s, [`option_${opt}`]: e.target.value } : s)}
-                            style={styles.input}
-                          />
-                        </div>
-                      ))}
-                      <div style={styles.field}>
-                        <label style={styles.label}>Correct answer</label>
-                        <select
-                          value={editState.correct_answer}
-                          onChange={e => setEditState(s => s ? { ...s, correct_answer: e.target.value } : s)}
-                          style={styles.select}
-                        >
-                          {['A', 'B', 'C', 'D'].map(o => (
-                            <option key={o} value={o}>{o}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div style={styles.field}>
-                        <label style={styles.label}>Hint (shown on wrong answer)</label>
-                        <textarea
-                          rows={2}
-                          value={editState.hint}
-                          onChange={e => setEditState(s => s ? { ...s, hint: e.target.value } : s)}
-                          style={styles.textarea}
-                        />
-                      </div>
-                      <div style={styles.editActions}>
-                        <button onClick={() => saveEdit(q.id)} disabled={isSaving} style={styles.saveBtn}>
-                          {isSaving ? 'Saving…' : 'Save changes'}
-                        </button>
-                        <button onClick={() => { setEditingId(null); setEditState(null) }} style={styles.cancelBtn}>
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    /* ── VIEW MODE ── */
-                    <div>
-                      <p style={styles.questionText}>{q.question_text}</p>
-                      <div style={styles.optionsGrid}>
-                        {(['a', 'b', 'c', 'd'] as const).map(opt => {
-                          const isCorrect = q.correct_answer === opt.toUpperCase()
-                          return (
-                            <div key={opt} style={{
-                              ...styles.option,
-                              background: isCorrect ? '#f0f7f2' : '#faf6ee',
-                              border: `1px solid ${isCorrect ? '#1b5e30' : 'rgba(27,94,48,0.12)'}`,
-                              color: isCorrect ? '#0d3a1b' : '#1a1a1a',
-                              fontWeight: isCorrect ? 600 : 400,
-                            }}>
-                              <span style={styles.optLabel}>{opt.toUpperCase()}</span>
-                              {q[`option_${opt}`]}
-                              {isCorrect && <span style={styles.correctMark}> ✓</span>}
-                            </div>
-                          )
-                        })}
-                      </div>
-                      <div style={styles.hintBox}>
-                        <span style={styles.hintLabel}>Hint</span>
-                        <span style={styles.hintText}>{q.hint}</span>
-                      </div>
-
-                      {/* Actions */}
-                      <div style={styles.actions}>
-                        <button
-                          onClick={() => startEdit(q)}
-                          disabled={isSaving}
-                          style={styles.actionBtn}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleRegenerateHint(q)}
-                          disabled={isRegen}
-                          style={styles.actionBtn}
-                        >
-                          {isRegen ? 'Regenerating…' : 'Regenerate hint'}
-                        </button>
-                        {q.is_approved ? (
-                          <button
-                            onClick={() => handleUnapprove(q)}
-                            disabled={isSaving}
-                            style={styles.unapproveBtn}
-                          >
-                            Unapprove
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleApprove(q)}
-                            disabled={isSaving}
-                            style={styles.approveBtn}
-                          >
-                            {isSaving ? 'Saving…' : 'Approve'}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(q.id)}
-                          style={styles.deleteBtn}
-                        >
-                          Delete
-                        </button>
-                      </div>
+              {/* Group header */}
+              <div style={s.groupHeader}>
+                <span style={{ ...s.diffBadge, background: dc.bg, color: dc.text, border: `1.5px solid ${dc.border}` }}>
+                  {diff}
+                </span>
+                <div style={s.groupMeta}>
+                  <span style={s.groupCount}>{groupApproved} / {grouped[diff].length} approved</span>
+                  {grouped[diff].length > 0 && (
+                    <div style={{ ...s.groupBar, background: 'rgba(26,122,64,0.1)' }}>
+                      <div style={{
+                        ...s.groupBarFill,
+                        width: `${(groupApproved / grouped[diff].length) * 100}%`,
+                        background: dc.accent,
+                      }} />
                     </div>
                   )}
                 </div>
-              )
-            })}
-          </div>
-        ))}
+              </div>
+
+              {grouped[diff].length === 0 && (
+                <div style={s.emptyGroup}>No {diff} questions found.</div>
+              )}
+
+              {grouped[diff].map((q, idx) => {
+                const isEditing = editingId === q.id
+                const isSaving  = savingId === q.id
+                const isRegen   = regeneratingId === q.id
+
+                return (
+                  <div
+                    key={q.id}
+                    className="qr-card"
+                    style={{
+                      ...s.card,
+                      borderLeft: `3px solid ${q.is_approved ? 'var(--green)' : dc.accent}`,
+                      opacity: isSaving ? 0.65 : 1,
+                    }}
+                  >
+                    {/* Card top bar */}
+                    <div style={s.cardTop}>
+                      <span style={s.qNum}>Q{idx + 1}</span>
+                      <span style={{ ...s.diffPip, background: dc.bg, color: dc.text, border: `1px solid ${dc.border}` }}>
+                        {diff}
+                      </span>
+                      {q.is_approved && (
+                        <span style={s.approvedBadge}>✓ Approved</span>
+                      )}
+                      {isSaving && (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: 'auto' }}>Saving…</span>
+                      )}
+                    </div>
+
+                    {isEditing && editState ? (
+                      /* ── EDIT MODE ── */
+                      <div>
+                        <div style={s.editNote}>
+                          Editing will reset approval status for this question.
+                        </div>
+
+                        <div style={s.field}>
+                          <label style={s.label}>Question</label>
+                          <textarea
+                            className="qr-textarea"
+                            rows={3}
+                            value={editState.question_text}
+                            onChange={e => setEditState(st => st ? { ...st, question_text: e.target.value } : st)}
+                            style={s.textarea}
+                          />
+                        </div>
+
+                        <div style={s.optionsEditGrid}>
+                          {(['a', 'b', 'c', 'd'] as const).map(opt => (
+                            <div key={opt} style={s.field}>
+                              <label style={s.label}>Option {opt.toUpperCase()}</label>
+                              <input
+                                className="qr-input"
+                                type="text"
+                                value={editState[`option_${opt}`]}
+                                onChange={e => setEditState(st => st ? { ...st, [`option_${opt}`]: e.target.value } : st)}
+                                style={s.input}
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ ...s.field, maxWidth: '180px' }}>
+                          <label style={s.label}>Correct answer</label>
+                          <select
+                            className="qr-select"
+                            value={editState.correct_answer}
+                            onChange={e => setEditState(st => st ? { ...st, correct_answer: e.target.value } : st)}
+                            style={s.select}
+                          >
+                            {['A', 'B', 'C', 'D'].map(o => (
+                              <option key={o} value={o}>{o}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div style={s.field}>
+                          <label style={s.label}>Hint <span style={{ fontWeight: 400, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>— shown when student answers wrong</span></label>
+                          <textarea
+                            className="qr-textarea"
+                            rows={2}
+                            value={editState.hint}
+                            onChange={e => setEditState(st => st ? { ...st, hint: e.target.value } : st)}
+                            style={s.textarea}
+                          />
+                        </div>
+
+                        <div style={s.editActions}>
+                          <button
+                            className="qr-save-btn"
+                            onClick={() => saveEdit(q.id)}
+                            disabled={isSaving}
+                            style={s.saveBtn}
+                          >
+                            {isSaving ? 'Saving…' : 'Save changes'}
+                          </button>
+                          <button
+                            className="qr-action-btn"
+                            onClick={() => { setEditingId(null); setEditState(null) }}
+                            style={s.cancelBtn}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* ── VIEW MODE ── */
+                      <div>
+                        <p style={s.questionText}>{q.question_text}</p>
+
+                        <div style={s.optionsGrid}>
+                          {(['a', 'b', 'c', 'd'] as const).map(opt => {
+                            const isCorrect = q.correct_answer === opt.toUpperCase()
+                            return (
+                              <div
+                                key={opt}
+                                style={{
+                                  ...s.option,
+                                  background: isCorrect ? 'var(--green-light)' : 'var(--cream)',
+                                  border:     `1.5px solid ${isCorrect ? 'rgba(26,122,64,0.3)' : 'var(--border)'}`,
+                                  color:      isCorrect ? 'var(--green-dark)' : 'var(--text)',
+                                  fontWeight: isCorrect ? 600 : 400,
+                                }}
+                              >
+                                <span style={{
+                                  ...s.optLabel,
+                                  background: isCorrect ? 'var(--green)' : 'var(--cream2)',
+                                  color:      isCorrect ? '#fff' : 'var(--muted)',
+                                }}>
+                                  {opt.toUpperCase()}
+                                </span>
+                                <span>{q[`option_${opt}`]}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        <div style={s.hintBox}>
+                          <span style={s.hintLabel}>Hint</span>
+                          <span style={s.hintText}>{q.hint}</span>
+                        </div>
+
+                        <div style={s.actions}>
+                          <button
+                            className="qr-action-btn"
+                            onClick={() => startEdit(q)}
+                            disabled={isSaving}
+                            style={s.actionBtn}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="qr-action-btn"
+                            onClick={() => handleRegenerateHint(q)}
+                            disabled={isRegen || isSaving}
+                            style={{ ...s.actionBtn, opacity: isRegen ? 0.6 : 1 }}
+                          >
+                            {isRegen ? 'Regenerating…' : 'Regenerate hint'}
+                          </button>
+
+                          {q.is_approved ? (
+                            <button
+                              className="qr-action-btn"
+                              onClick={() => handleUnapprove(q)}
+                              disabled={isSaving}
+                              style={s.unapproveBtn}
+                            >
+                              Unapprove
+                            </button>
+                          ) : (
+                            <button
+                              className="qr-approve-btn"
+                              onClick={() => handleApprove(q)}
+                              disabled={isSaving}
+                              style={s.approveBtn}
+                            >
+                              {isSaving ? 'Saving…' : '✓ Approve'}
+                            </button>
+                          )}
+
+                          <button
+                            className="qr-delete-btn"
+                            onClick={() => handleDelete(q.id)}
+                            style={s.deleteBtn}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
       </div>
     </AppLayout>
   )
@@ -397,7 +483,7 @@ export default function QuestionsPage() {
   return (
     <Suspense fallback={
       <AppLayout title="Question Review">
-        <div style={{ color: '#6b6b6b', fontSize: '0.9rem' }}>Loading…</div>
+        <div style={{ color: '#6b7280', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Loading…</div>
       </AppLayout>
     }>
       <QuestionsInner />
@@ -405,301 +491,63 @@ export default function QuestionsPage() {
   )
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: { maxWidth: '780px' },
-  pageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '1.75rem',
-    gap: '1rem',
-    flexWrap: 'wrap',
-  },
-  pageTitle: {
-    fontFamily: 'Georgia, serif',
-    fontSize: '1.5rem',
-    fontWeight: 400,
-    color: '#0d3a1b',
-    marginBottom: '0.4rem',
-  },
-  pageDesc: {
-    fontSize: '0.875rem',
-    color: '#6b6b6b',
-    lineHeight: 1.6,
-  },
-  headerActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    flexShrink: 0,
-  },
-  progressPill: {
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    color: '#1b5e30',
-    background: '#f0f7f2',
-    border: '1px solid rgba(27,94,48,0.2)',
-    borderRadius: '20px',
-    padding: '0.3rem 0.85rem',
-  },
-  approveAllBtn: {
-    background: '#1b5e30',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    padding: '0.45rem 1rem',
-    fontSize: '0.8rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  errorBox: {
-    background: '#fdf0f0',
-    border: '1px solid rgba(139,26,26,0.2)',
-    borderRadius: '6px',
-    padding: '0.65rem 1rem',
-    fontSize: '0.82rem',
-    color: '#8b1a1a',
-    marginBottom: '1.25rem',
-  },
-  emptyState: {
-    fontSize: '0.875rem',
-    color: '#6b6b6b',
-    padding: '2rem',
-    textAlign: 'center',
-    background: '#fff',
-    border: '1px solid rgba(27,94,48,0.12)',
-    borderRadius: '8px',
-  },
-  loadingText: {
-    fontSize: '0.875rem',
-    color: '#6b6b6b',
-    padding: '1rem 0',
-  },
-  group: { marginBottom: '2.25rem' },
-  groupHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    marginBottom: '0.85rem',
-  },
-  diffBadge: {
-    fontSize: '0.7rem',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    padding: '0.25rem 0.7rem',
-    borderRadius: '4px',
-  },
-  groupCount: {
-    fontSize: '0.78rem',
-    color: '#6b6b6b',
-  },
-  emptyGroup: {
-    fontSize: '0.82rem',
-    color: '#6b6b6b',
-    padding: '0.75rem 1rem',
-    background: '#fff',
-    border: '1px solid rgba(27,94,48,0.1)',
-    borderRadius: '6px',
-  },
-  card: {
-    background: '#ffffff',
-    border: '1px solid rgba(27,94,48,0.12)',
-    borderRadius: '8px',
-    padding: '1.25rem 1.5rem',
-    marginBottom: '0.85rem',
-    transition: 'opacity 0.15s',
-  },
-  cardTop: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.6rem',
-    marginBottom: '0.75rem',
-  },
-  qNum: {
-    fontFamily: 'monospace',
-    fontSize: '0.72rem',
-    fontWeight: 700,
-    color: '#6b6b6b',
-    background: '#f0e9d8',
-    padding: '0.15rem 0.45rem',
-    borderRadius: '3px',
-  },
-  approvedBadge: {
-    fontSize: '0.68rem',
-    fontWeight: 700,
-    color: '#1b5e30',
-    background: '#f0f7f2',
-    border: '1px solid rgba(27,94,48,0.2)',
-    padding: '0.15rem 0.5rem',
-    borderRadius: '3px',
-  },
-  questionText: {
-    fontSize: '0.9rem',
-    color: '#1a1a1a',
-    lineHeight: 1.6,
-    marginBottom: '0.85rem',
-    fontWeight: 500,
-  },
-  optionsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '0.45rem',
-    marginBottom: '0.85rem',
-  },
-  option: {
-    fontSize: '0.82rem',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '6px',
-    lineHeight: 1.4,
-    display: 'flex',
-    gap: '0.4rem',
-    alignItems: 'flex-start',
-  },
-  optLabel: {
-    fontWeight: 700,
-    flexShrink: 0,
-  },
-  correctMark: {
-    color: '#1b5e30',
-    fontWeight: 700,
-  },
-  hintBox: {
-    background: '#fdf8ee',
-    border: '1px solid rgba(201,148,26,0.2)',
-    borderRadius: '6px',
-    padding: '0.55rem 0.85rem',
-    fontSize: '0.8rem',
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'flex-start',
-    marginBottom: '0.85rem',
-  },
-  hintLabel: {
-    fontWeight: 700,
-    color: '#c9941a',
-    flexShrink: 0,
-    fontSize: '0.72rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-    paddingTop: '1px',
-  },
-  hintText: {
-    color: '#6b6b6b',
-    lineHeight: 1.5,
-  },
-  actions: {
-    display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  actionBtn: {
-    background: '#f0e9d8',
-    color: '#1a1a1a',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '0.4rem 0.85rem',
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  approveBtn: {
-    background: '#1b5e30',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '0.4rem 0.85rem',
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  unapproveBtn: {
-    background: '#f0e9d8',
-    color: '#8b1a1a',
-    border: '1px solid rgba(139,26,26,0.2)',
-    borderRadius: '5px',
-    padding: '0.4rem 0.85rem',
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  deleteBtn: {
-    background: 'none',
-    color: '#8b1a1a',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '0.4rem 0.85rem',
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    marginLeft: 'auto',
-  },
-  field: { marginBottom: '0.85rem' },
-  label: {
-    display: 'block',
-    fontSize: '0.72rem',
-    fontWeight: 600,
-    color: '#1a1a1a',
-    marginBottom: '0.35rem',
-    letterSpacing: '0.02em',
-  },
-  input: {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: '1px solid rgba(27,94,48,0.2)',
-    borderRadius: '6px',
-    fontSize: '0.875rem',
-    color: '#1a1a1a',
-    background: '#faf6ee',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-  },
-  textarea: {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: '1px solid rgba(27,94,48,0.2)',
-    borderRadius: '6px',
-    fontSize: '0.875rem',
-    color: '#1a1a1a',
-    background: '#faf6ee',
-    outline: 'none',
-    resize: 'vertical' as const,
-    fontFamily: 'inherit',
-    lineHeight: 1.6,
-    boxSizing: 'border-box' as const,
-  },
-  select: {
-    padding: '0.5rem 0.75rem',
-    border: '1px solid rgba(27,94,48,0.2)',
-    borderRadius: '6px',
-    fontSize: '0.875rem',
-    color: '#1a1a1a',
-    background: '#faf6ee',
-    outline: 'none',
-  },
-  editActions: {
-    display: 'flex',
-    gap: '0.5rem',
-    marginTop: '0.5rem',
-  },
-  saveBtn: {
-    background: '#1b5e30',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '0.45rem 1rem',
-    fontSize: '0.8rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  cancelBtn: {
-    background: '#f0e9d8',
-    color: '#1a1a1a',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '0.45rem 1rem',
-    fontSize: '0.8rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
+const s: Record<string, React.CSSProperties> = {
+  page: { maxWidth: '800px', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+
+  pageHeader:    { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', gap: '1rem', flexWrap: 'wrap' },
+  pageTitle:     { fontFamily: "'DM Serif Display', serif", fontSize: '1.65rem', fontWeight: 400, color: '#0d3d20', marginBottom: '0.4rem' },
+  pageDesc:      { fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.65 },
+  headerActions: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 },
+
+  progressPill:  { fontSize: '0.78rem', fontWeight: 700, borderRadius: '20px', padding: '0.35rem 0.9rem', transition: 'all 0.2s' },
+  approveAllBtn: { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.82rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+
+  errorBox: { display: 'flex', gap: '0.5rem', alignItems: 'flex-start', background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.83rem', color: '#8b1a1a', marginBottom: '1.25rem', lineHeight: 1.5 },
+
+  emptyState: { textAlign: 'center' as const, padding: '2.5rem 2rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px' },
+
+  loadingWrap: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.5rem 0' },
+  spinner:     { width: '20px', height: '20px', borderRadius: '50%', border: '3px solid rgba(26,122,64,0.15)', borderTop: '3px solid #1a7a40', animation: 'spin 0.8s linear infinite' },
+
+  group:       { marginBottom: '2.5rem' },
+  groupHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.9rem' },
+  diffBadge:   { fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '0.3rem 0.8rem', borderRadius: '6px' },
+  groupMeta:   { display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 },
+  groupCount:  { fontSize: '0.78rem', color: '#6b7280', whiteSpace: 'nowrap' as const },
+  groupBar:    { flex: 1, height: '4px', borderRadius: '2px', maxWidth: '120px', overflow: 'hidden' },
+  groupBarFill:{ height: '100%', borderRadius: '2px', transition: 'width 0.3s' },
+  emptyGroup:  { fontSize: '0.83rem', color: '#6b7280', padding: '0.85rem 1rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.1)', borderRadius: '12px' },
+
+  card:    { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '0.85rem' },
+  cardTop: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' },
+  qNum:    { fontSize: '0.7rem', fontWeight: 800, color: '#6b7280', background: '#f5efe3', padding: '0.15rem 0.5rem', borderRadius: '5px', fontFamily: 'monospace' },
+  diffPip: { fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, padding: '0.15rem 0.5rem', borderRadius: '5px' },
+  approvedBadge: { fontSize: '0.68rem', fontWeight: 700, color: '#0d3d20', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.2)', padding: '0.15rem 0.55rem', borderRadius: '5px' },
+
+  questionText: { fontSize: '0.92rem', color: '#1a1f16', lineHeight: 1.65, marginBottom: '0.9rem', fontWeight: 600 },
+
+  optionsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.9rem' },
+  option:      { display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.83rem', padding: '0.55rem 0.75rem', borderRadius: '9px', lineHeight: 1.45 },
+  optLabel:    { flexShrink: 0, fontWeight: 800, fontSize: '0.72rem', padding: '0.1rem 0.45rem', borderRadius: '5px', marginTop: '1px' },
+
+  hintBox:  { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '9px', padding: '0.6rem 0.85rem', fontSize: '0.81rem', marginBottom: '1rem' },
+  hintLabel:{ fontWeight: 800, color: '#f0a500', flexShrink: 0, fontSize: '0.65rem', textTransform: 'uppercase' as const, letterSpacing: '0.08em', paddingTop: '2px' },
+  hintText: { color: '#6b7280', lineHeight: 1.55 },
+
+  actions:      { display: 'flex', gap: '0.45rem', flexWrap: 'wrap' as const, alignItems: 'center' },
+  actionBtn:    { background: '#f5efe3', color: '#1a1f16', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  approveBtn:   { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  unapproveBtn: { background: '#fff5f5', color: '#8b1a1a', border: '1.5px solid rgba(139,26,26,0.2)', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  deleteBtn:    { background: 'none', color: '#6b7280', border: 'none', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', marginLeft: 'auto', transition: 'all 0.15s' },
+
+  editNote:      { fontSize: '0.78rem', color: '#7a5500', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '8px', padding: '0.55rem 0.85rem', marginBottom: '1rem' },
+  field:         { marginBottom: '0.9rem' },
+  label:         { display: 'block', fontSize: '0.7rem', fontWeight: 800, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const, marginBottom: '0.4rem' },
+  input:         { width: '100%', padding: '0.6rem 0.85rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  textarea:      { width: '100%', padding: '0.6rem 0.85rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', resize: 'vertical' as const, lineHeight: 1.65, boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  select:        { width: '100%', padding: '0.6rem 0.85rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  optionsEditGrid:{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' },
+  editActions:   { display: 'flex', gap: '0.5rem', marginTop: '0.25rem' },
+  saveBtn:       { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.83rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  cancelBtn:     { background: '#f5efe3', color: '#1a1f16', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.83rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
 }

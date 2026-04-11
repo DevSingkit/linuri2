@@ -12,7 +12,8 @@ export default function AppLayout({ title, children }: Props) {
     <div style={{
       display: 'flex',
       minHeight: '100vh',
-      background: '#faf6ee',
+      background: '#fdfaf5',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
       <AppSidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>

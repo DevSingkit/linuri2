@@ -29,21 +29,27 @@ interface GeneratedQuestion {
 const SUBJECTS: Subject[] = ['English', 'Mathematics', 'Science']
 const ACCEPTED = '.pdf,.docx,.txt,.png,.jpg,.jpeg,.pptx,.xlsx'
 
+const SUBJECT_ICONS: Record<Subject, string> = {
+  English: '📖',
+  Mathematics: '🔢',
+  Science: '🔬',
+}
+
 export default function NewLessonPage() {
   const router = useRouter()
 
-  const [classes, setClasses]       = useState<ClassOption[]>([])
-  const [classId, setClassId]       = useState('')
-  const [title, setTitle]           = useState('')
-  const [subject, setSubject]       = useState<Subject>('English')
-  const [skillName, setSkillName]   = useState('')
-  const [lessonText, setLessonText] = useState('')
-  const [file, setFile]             = useState<File | null>(null)
-  const [activeTab, setActiveTab]   = useState<'text' | 'file'>('text')
-  const [error, setError]           = useState('')
-  const [status, setStatus]         = useState<'idle' | 'uploading' | 'generating' | 'saving'>('idle')
-  const fileInputRef                = useRef<HTMLInputElement>(null)
+  const [classes, setClasses]         = useState<ClassOption[]>([])
+  const [classId, setClassId]         = useState('')
+  const [title, setTitle]             = useState('')
+  const [subject, setSubject]         = useState<Subject>('English')
+  const [skillName, setSkillName]     = useState('')
+  const [lessonText, setLessonText]   = useState('')
+  const [file, setFile]               = useState<File | null>(null)
+  const [activeTab, setActiveTab]     = useState<'text' | 'file'>('text')
+  const [error, setError]             = useState('')
+  const [status, setStatus]           = useState<'idle' | 'uploading' | 'generating' | 'saving'>('idle')
   const [isPublished, setIsPublished] = useState(false)
+  const fileInputRef                  = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -61,8 +67,7 @@ export default function NewLessonPage() {
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0] ?? null
-    setFile(f)
+    setFile(e.target.files?.[0] ?? null)
   }
 
   const removeFile = () => {
@@ -72,28 +77,20 @@ export default function NewLessonPage() {
 
   const switchTab = (tab: 'text' | 'file') => {
     setActiveTab(tab)
-    if (tab === 'file') {
-      fileInputRef.current?.click()
-    } else {
-      removeFile()
-    }
+    if (tab === 'file') fileInputRef.current?.click()
+    else removeFile()
   }
 
   const handleSubmit = async () => {
     setError('')
-
     if (!classId)          { setError('Please select a class.'); return }
     if (!title.trim())     { setError('Lesson title is required.'); return }
     if (!skillName.trim()) { setError('Skill name is required.'); return }
-
-    // Lesson text is only required if no file is uploaded
     if (!file && lessonText.trim().length < 80) {
       setError('Lesson text must be at least 80 characters, or upload a file instead.')
       return
     }
 
-    // If file uploaded but no lesson text, we need some text for Gemini
-    // Use skill name + subject as a minimal fallback prompt
     const geminiText = lessonText.trim().length >= 80
       ? lessonText.trim()
       : `This is a ${subject} lesson about "${skillName}". ` +
@@ -104,7 +101,6 @@ export default function NewLessonPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated.')
 
-      // Step 1 — Upload file if provided
       let fileUrl: string | null = null
       if (file) {
         setStatus('uploading')
@@ -114,36 +110,25 @@ export default function NewLessonPage() {
           .from('lesson-files')
           .upload(fileName, file, { upsert: false })
         if (uploadError) throw new Error('File upload failed: ' + uploadError.message)
-
-        const { data: urlData } = supabase.storage
-          .from('lesson-files')
-          .getPublicUrl(fileName)
+        const { data: urlData } = supabase.storage.from('lesson-files').getPublicUrl(fileName)
         fileUrl = urlData.publicUrl
       }
 
-      // Step 2 — Generate questions with Gemini
       setStatus('generating')
       const res = await fetch('/api/generate-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject,
-          skillName,
-          lessonText: geminiText,
-        }),
+        body: JSON.stringify({ subject, skillName, lessonText: geminiText }),
       })
-
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body.error ?? 'Question generation failed.')
       }
-
       const { questions } = await res.json()
       if (!Array.isArray(questions) || questions.length === 0) {
         throw new Error('Gemini returned no questions. Try adding lesson text for better results.')
       }
 
-      // Step 3 — Save lesson
       setStatus('saving')
       const { data: lesson, error: lessonError } = await supabase
         .from('lessons')
@@ -160,10 +145,8 @@ export default function NewLessonPage() {
         })
         .select('id')
         .single()
-
       if (lessonError || !lesson) throw new Error('Failed to save lesson.')
 
-      // Step 4 — Save questions
       const rows = questions.map((q: GeneratedQuestion) => ({
         lesson_id:      lesson.id,
         difficulty:     q.difficulty,
@@ -176,12 +159,10 @@ export default function NewLessonPage() {
         hint:           q.hint,
         is_approved:    false,
       }))
-
       const { error: qError } = await supabase.from('questions').insert(rows)
       if (qError) throw new Error('Lesson saved but questions failed to save.')
 
       router.push(`/teacher/questions?lesson_id=${lesson.id}`)
-
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
       setStatus('idle')
@@ -192,154 +173,211 @@ export default function NewLessonPage() {
 
   return (
     <AppLayout title="New Lesson">
-      <div style={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        :root {
+          --green:       #1a7a40;
+          --green-dark:  #0d3d20;
+          --green-mid:   #1f6b38;
+          --green-light: #eaf6ef;
+          --gold:        #f0a500;
+          --gold-lt:     #ffd166;
+          --gold-bg:     #fffbf0;
+          --cream:       #fdfaf5;
+          --cream2:      #f5efe3;
+          --text:        #1a1f16;
+          --muted:       #6b7280;
+          --border:      rgba(26,122,64,0.13);
+        }
+        .nl-select:focus, .nl-input:focus, .nl-textarea:focus {
+          outline: none;
+          border-color: var(--green);
+          box-shadow: 0 0 0 3px rgba(26,122,64,0.1);
+        }
+        .nl-subject-btn:hover { filter: brightness(0.95); }
+        .nl-tab:hover { background: var(--cream2) !important; }
+        .nl-dropzone:hover { border-color: var(--green) !important; background: var(--green-light) !important; }
+        .nl-submit-btn:hover:not(:disabled) { background: var(--green-mid) !important; }
+        .nl-remove-btn:hover { background: #fde8e8 !important; }
+      `}</style>
 
-        <div style={styles.pageHeader}>
-          <h2 style={styles.pageTitle}>Create a new lesson</h2>
-          <p style={styles.pageDesc}>
-            Fill in the lesson details below. Gemini will generate 15 multiple-choice questions
-            (5 Basic, 5 Standard, 5 Advanced) which you can review before publishing.
+      <div style={s.page}>
+
+        {/* Page header */}
+        <div style={s.pageHeader}>
+          <h1 style={s.pageTitle}>Create a new lesson</h1>
+          <p style={s.pageDesc}>
+            Fill in the details below. Gemini will generate 15 multiple-choice questions
+            (5 Basic · 5 Standard · 5 Advanced) for you to review before publishing.
           </p>
         </div>
 
-        <div style={styles.card}>
+        {/* Card */}
+        <div style={s.card}>
 
-          {error && <div style={styles.errorBox}>{error}</div>}
+          {error && (
+            <div style={s.errorBox}>
+              <span style={s.errorIcon}>⚠</span>
+              {error}
+            </div>
+          )}
 
           {/* Class */}
-          <div style={styles.field}>
-            <label style={styles.label}>Class</label>
+          <div style={s.field}>
+            <label style={s.label}>Class</label>
             {classes.length === 0 ? (
-              <div style={styles.emptyNote}>
-                You have no classes yet. Create a class first before adding lessons.
+              <div style={s.emptyNote}>
+                You have no classes yet. Create a class first before adding a lesson.
               </div>
             ) : (
               <select
+                className="nl-select"
                 value={classId}
                 onChange={e => setClassId(e.target.value)}
-                style={styles.select}
+                style={s.select}
                 disabled={busy}
               >
                 {classes.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} — {c.section}
-                  </option>
+                  <option key={c.id} value={c.id}>{c.name} — {c.section}</option>
                 ))}
               </select>
             )}
           </div>
 
           {/* Subject */}
-          <div style={styles.field}>
-            <label style={styles.label}>Subject</label>
-            <div style={styles.subjectRow}>
-              {SUBJECTS.map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSubject(s)}
-                  disabled={busy}
-                  style={{
-                    ...styles.subjectBtn,
-                    background: subject === s ? '#1b5e30' : '#f0e9d8',
-                    color:      subject === s ? '#ffffff' : '#6b6b6b',
-                    fontWeight: subject === s ? 600 : 400,
-                  }}
-                >
-                  {s}
-                </button>
-              ))}
+          <div style={s.field}>
+            <label style={s.label}>Subject</label>
+            <div style={s.subjectRow}>
+              {SUBJECTS.map(sub => {
+                const active = subject === sub
+                return (
+                  <button
+                    key={sub}
+                    className="nl-subject-btn"
+                    onClick={() => setSubject(sub)}
+                    disabled={busy}
+                    style={{
+                      ...s.subjectBtn,
+                      background:  active ? 'var(--green-dark)' : 'var(--cream2)',
+                      color:       active ? '#fff' : 'var(--muted)',
+                      border:      active ? '1.5px solid var(--green-dark)' : '1.5px solid var(--border)',
+                      fontWeight:  active ? 700 : 500,
+                    }}
+                  >
+                    <span style={{ fontSize: '1rem' }}>{SUBJECT_ICONS[sub]}</span>
+                    {sub}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          {/* Title */}
-          <div style={styles.field}>
-            <label style={styles.label}>Lesson title</label>
+          {/* Divider */}
+          <div style={s.divider} />
+
+          {/* Lesson title */}
+          <div style={s.field}>
+            <label style={s.label}>Lesson title</label>
             <input
+              className="nl-input"
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Introduction to Fractions"
-              style={styles.input}
+              style={s.input}
               disabled={busy}
             />
           </div>
 
           {/* Skill name */}
-          <div style={styles.field}>
-            <label style={styles.label}>
+          <div style={s.field}>
+            <label style={s.label}>
               Skill name
-              <span style={styles.labelHint}> — e.g. "Identifying the main idea"</span>
+              <span style={s.labelHint}> — e.g. "Identifying the main idea"</span>
             </label>
             <input
+              className="nl-input"
               type="text"
               value={skillName}
               onChange={e => setSkillName(e.target.value)}
               placeholder="Enter the skill being assessed"
-              style={styles.input}
+              style={s.input}
               disabled={busy}
             />
           </div>
 
-          {/* Lesson content */}
-          <div style={styles.field}>
-            <label style={styles.label}>Lesson content</label>
+          {/* Divider */}
+          <div style={s.divider} />
 
-            {/* Info box */}
-            <div style={styles.infoBox}>
-              <span style={styles.infoIcon}>ℹ</span>
-              <span style={styles.infoText}>
-                You can type the lesson text <strong>or</strong> upload a file for students to download.
-                If you upload a file without typing text, Gemini will generate questions based on the skill name.
+          {/* Lesson content */}
+          <div style={s.field}>
+            <label style={s.label}>Lesson content</label>
+
+            <div style={s.infoBox}>
+              <span style={s.infoIcon}>ℹ</span>
+              <span>
+                Type the lesson text <strong>or</strong> upload a file for students to download.
+                If you upload without text, Gemini will base questions on the skill name.
                 For best results, provide both.
               </span>
             </div>
 
-            {/* Tab toggle */}
-            <div style={styles.tabRow}>
-              <button
-                type="button"
-                style={{ ...styles.tab, ...(activeTab === 'text' ? styles.tabActive : {}) }}
-                onClick={() => switchTab('text')}
-                disabled={busy}
-              >
-                ✏️ Type lesson text
-                {lessonText.trim().length >= 80 && activeTab === 'text' && (
-                  <span style={styles.tabCheck}>✓</span>
-                )}
-              </button>
-              <button
-                type="button"
-                style={{ ...styles.tab, ...(activeTab === 'file' ? styles.tabActive : {}) }}
-                onClick={() => switchTab('file')}
-                disabled={busy}
-              >
-                📎 Upload file
-                {file && <span style={styles.tabCheck}>✓</span>}
-              </button>
+            {/* Tabs */}
+            <div style={s.tabRow}>
+              {(['text', 'file'] as const).map(tab => {
+                const active  = activeTab === tab
+                const checked = tab === 'text'
+                  ? lessonText.trim().length >= 80
+                  : !!file
+                return (
+                  <button
+                    key={tab}
+                    className="nl-tab"
+                    type="button"
+                    onClick={() => switchTab(tab)}
+                    disabled={busy}
+                    style={{
+                      ...s.tab,
+                      background:   active ? 'var(--green-dark)' : '#fff',
+                      color:        active ? 'var(--gold-lt)' : 'var(--muted)',
+                      borderColor:  active ? 'var(--green-dark)' : 'var(--border)',
+                      fontWeight:   active ? 700 : 500,
+                    }}
+                  >
+                    {tab === 'text' ? '✏️ Type lesson text' : '📎 Upload file'}
+                    {checked && (
+                      <span style={s.tabBadge}>✓</span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Text tab */}
             {activeTab === 'text' && (
               <>
                 <textarea
+                  className="nl-textarea"
                   value={lessonText}
                   onChange={e => setLessonText(e.target.value)}
                   placeholder={
-                    `Paste or type the lesson content here.\n\n` +
-                    `The more detail you provide, the better the generated questions will be. ` +
-                    `Include definitions, examples, and explanations relevant to the skill.`
+                    'Paste or type the lesson content here.\n\n' +
+                    'The more detail you provide, the better the generated questions will be. ' +
+                    'Include definitions, examples, and explanations relevant to the skill.'
                   }
                   rows={12}
-                  style={styles.textarea}
+                  style={s.textarea}
                   disabled={busy}
                 />
-                <div style={styles.charCount}>
-                  {lessonText.length} characters
+                <div style={s.charRow}>
+                  <span style={{ color: 'var(--muted)' }}>{lessonText.length} characters</span>
                   {lessonText.length > 0 && lessonText.length < 80 && (
-                    <span style={{ color: '#8b1a1a' }}> — needs {80 - lessonText.length} more</span>
+                    <span style={{ color: '#8b1a1a', fontWeight: 600 }}>
+                      {80 - lessonText.length} more needed
+                    </span>
                   )}
                   {lessonText.length >= 80 && (
-                    <span style={{ color: '#1b5e30' }}> ✓ good to go</span>
+                    <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ Good to go</span>
                   )}
                 </div>
               </>
@@ -349,14 +387,15 @@ export default function NewLessonPage() {
             {activeTab === 'file' && (
               <>
                 {file ? (
-                  <div style={styles.filePreview}>
-                    <span style={styles.fileIcon}>📄</span>
-                    <div style={styles.fileInfo}>
-                      <span style={styles.fileName}>{file.name}</span>
-                      <span style={styles.fileSize}>{(file.size / 1024).toFixed(1)} KB</span>
+                  <div style={s.filePreview}>
+                    <div style={s.fileIconWrap}>📄</div>
+                    <div style={s.fileInfo}>
+                      <span style={s.fileName}>{file.name}</span>
+                      <span style={s.fileSize}>{(file.size / 1024).toFixed(1)} KB</span>
                     </div>
                     <button
-                      style={styles.removeBtn}
+                      className="nl-remove-btn"
+                      style={s.removeBtn}
                       onClick={removeFile}
                       disabled={busy}
                       type="button"
@@ -366,34 +405,40 @@ export default function NewLessonPage() {
                   </div>
                 ) : (
                   <div
-                    style={styles.dropZone}
+                    className="nl-dropzone"
+                    style={s.dropZone}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <span style={styles.dropIcon}>📁</span>
-                    <p style={styles.dropText}>Click to choose a file</p>
-                    <p style={styles.dropHint}>PDF, Word, PowerPoint, Excel, images, or plain text</p>
+                    <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📁</span>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--green-dark)', margin: '0 0 0.25rem' }}>
+                      Click to choose a file
+                    </p>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0 }}>
+                      PDF, Word, PowerPoint, Excel, images, or plain text
+                    </p>
                   </div>
                 )}
 
-                {/* Also show textarea below when in file mode so teacher can optionally add text */}
-                <div style={{ marginTop: '1rem' }}>
-                  <label style={{ ...styles.label, color: '#6b6b6b' }}>
+                {/* Optional text below file */}
+                <div style={{ marginTop: '1.25rem' }}>
+                  <label style={{ ...s.label, color: 'var(--muted)' }}>
                     Lesson text
-                    <span style={styles.labelHint}> — optional when a file is uploaded</span>
+                    <span style={s.labelHint}> — optional when a file is uploaded</span>
                   </label>
                   <textarea
+                    className="nl-textarea"
                     value={lessonText}
                     onChange={e => setLessonText(e.target.value)}
                     placeholder="Optionally add text here to improve question quality…"
                     rows={5}
-                    style={{ ...styles.textarea, opacity: 0.85 }}
+                    style={{ ...s.textarea, opacity: 0.85 }}
                     disabled={busy}
                   />
                   {lessonText.length > 0 && (
-                    <div style={styles.charCount}>
-                      {lessonText.length} characters
+                    <div style={s.charRow}>
+                      <span style={{ color: 'var(--muted)' }}>{lessonText.length} characters</span>
                       {lessonText.length >= 80 && (
-                        <span style={{ color: '#1b5e30' }}> ✓ will be used for question generation</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ Will be used for question generation</span>
                       )}
                     </div>
                   )}
@@ -412,39 +457,60 @@ export default function NewLessonPage() {
             />
           </div>
 
-          {/* Publish toggle — add this just above the Submit button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <input
-              type="checkbox"
-              id="publish"
-              checked={isPublished}
-              onChange={e => setIsPublished(e.target.checked)}
-              disabled={busy}
-              style={{ width: '16px', height: '16px', accentColor: '#1b5e30', cursor: 'pointer' }}
-            />
-            <label htmlFor="publish" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1a1a1a', cursor: 'pointer' }}>
-              Publish immediately (students can see and take quizzes)
-            </label>
+          {/* Divider */}
+          <div style={s.divider} />
+
+          {/* Publish toggle */}
+          <div style={s.publishRow}>
+            <div style={s.publishToggleWrap}>
+              <input
+                type="checkbox"
+                id="publish"
+                checked={isPublished}
+                onChange={e => setIsPublished(e.target.checked)}
+                disabled={busy}
+                style={s.checkbox}
+              />
+              <div
+                style={{
+                  ...s.toggleTrack,
+                  background: isPublished ? 'var(--green)' : 'rgba(26,122,64,0.15)',
+                }}
+                onClick={() => !busy && setIsPublished(v => !v)}
+              >
+                <div style={{
+                  ...s.toggleThumb,
+                  transform: isPublished ? 'translateX(18px)' : 'translateX(2px)',
+                }} />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="publish" style={s.publishLabel}>
+                Publish immediately
+              </label>
+              <p style={s.publishHint}>Students can see and take quizzes as soon as the lesson is saved.</p>
+            </div>
           </div>
 
           {/* Submit */}
           <button
+            className="nl-submit-btn"
             onClick={handleSubmit}
             disabled={busy || classes.length === 0}
             style={{
-              ...styles.btn,
-              opacity: busy || classes.length === 0 ? 0.65 : 1,
+              ...s.submitBtn,
+              opacity: busy || classes.length === 0 ? 0.6 : 1,
               cursor:  busy || classes.length === 0 ? 'not-allowed' : 'pointer',
             }}
           >
-            {status === 'uploading'  && '⬆️ Uploading file…'}
-            {status === 'generating' && '⏳ Generating questions with Gemini…'}
-            {status === 'saving'     && '💾 Saving to database…'}
+            {status === 'uploading'  && '⬆️  Uploading file…'}
+            {status === 'generating' && '⏳  Generating questions with Gemini…'}
+            {status === 'saving'     && '💾  Saving to database…'}
             {status === 'idle'       && 'Generate questions & continue →'}
           </button>
 
           {busy && (
-            <p style={styles.statusHint}>
+            <p style={s.statusHint}>
               {status === 'uploading'
                 ? 'Uploading your file to storage…'
                 : status === 'generating'
@@ -459,40 +525,59 @@ export default function NewLessonPage() {
   )
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page:        { maxWidth: '680px' },
+const s: Record<string, React.CSSProperties> = {
+  page:        { maxWidth: '680px', fontFamily: "'Plus Jakarta Sans', sans-serif" },
   pageHeader:  { marginBottom: '1.75rem' },
-  pageTitle:   { fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 400, color: '#0d3a1b', marginBottom: '0.4rem' },
-  pageDesc:    { fontSize: '0.875rem', color: '#6b6b6b', lineHeight: 1.6 },
-  card:        { background: '#ffffff', border: '1px solid rgba(27,94,48,0.15)', borderRadius: '10px', padding: '2rem' },
-  errorBox:    { background: '#fdf0f0', border: '1px solid rgba(139,26,26,0.2)', borderRadius: '6px', padding: '0.65rem 1rem', fontSize: '0.82rem', color: '#8b1a1a', marginBottom: '1.25rem' },
-  field:       { marginBottom: '1.4rem' },
-  label:       { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#1a1a1a', marginBottom: '0.45rem', letterSpacing: '0.02em' },
-  labelHint:   { fontWeight: 400, color: '#6b6b6b' },
-  emptyNote:   { fontSize: '0.82rem', color: '#8b1a1a', background: '#fdf8ee', border: '1px solid rgba(201,148,26,0.25)', borderRadius: '6px', padding: '0.65rem 1rem' },
-  select:      { width: '100%', padding: '0.6rem 0.85rem', border: '1px solid rgba(27,94,48,0.2)', borderRadius: '6px', fontSize: '0.9rem', color: '#1a1a1a', background: '#faf6ee', outline: 'none', boxSizing: 'border-box' as const },
-  subjectRow:  { display: 'flex', gap: '0.5rem' },
-  subjectBtn:  { flex: 1, padding: '0.55rem', border: 'none', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.15s' },
-  input:       { width: '100%', padding: '0.6rem 0.85rem', border: '1px solid rgba(27,94,48,0.2)', borderRadius: '6px', fontSize: '0.9rem', color: '#1a1a1a', background: '#faf6ee', outline: 'none', boxSizing: 'border-box' as const },
-  infoBox:     { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', background: '#f0f7f2', border: '1px solid rgba(27,94,48,0.2)', borderRadius: '6px', padding: '0.75rem 1rem', marginBottom: '0.85rem', fontSize: '0.82rem', color: '#1a1a1a', lineHeight: 1.5 },
-  infoIcon:    { flexShrink: 0, fontWeight: 700, color: '#1b5e30', fontSize: '0.9rem' },
-  infoText:    { color: '#1a1a1a' },
-  tabRow:      { display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' },
-  tab:         { flex: 1, padding: '0.5rem', border: '1.5px solid rgba(27,94,48,0.2)', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 500, cursor: 'pointer', background: '#fff', color: '#6b6b6b', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' },
-  tabActive:   { background: '#0d3a1b', color: '#e8b84b', borderColor: '#0d3a1b', fontWeight: 600 },
-  tabCheck:    { background: '#1b5e30', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.35rem', borderRadius: '8px' },
-  textarea:    { width: '100%', padding: '0.75rem 0.85rem', border: '1px solid rgba(27,94,48,0.2)', borderRadius: '6px', fontSize: '0.875rem', color: '#1a1a1a', background: '#faf6ee', outline: 'none', resize: 'vertical' as const, lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box' as const },
-  charCount:   { fontSize: '0.72rem', color: '#6b6b6b', marginTop: '0.35rem', textAlign: 'right' as const },
-  dropZone:    { border: '2px dashed rgba(27,94,48,0.3)', borderRadius: '8px', padding: '2.5rem 1rem', textAlign: 'center' as const, cursor: 'pointer', background: '#faf6ee', transition: 'all 0.15s' },
-  dropIcon:    { fontSize: '2rem', display: 'block', marginBottom: '0.5rem' },
-  dropText:    { fontSize: '0.9rem', fontWeight: 600, color: '#0d3a1b', margin: '0 0 0.25rem' },
-  dropHint:    { fontSize: '0.78rem', color: '#6b6b6b', margin: 0 },
-  filePreview: { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#f0f7f2', border: '1.5px solid #1b5e30', borderRadius: '8px', padding: '0.85rem 1rem' },
-  fileIcon:    { fontSize: '1.5rem', flexShrink: 0 },
-  fileInfo:    { display: 'flex', flexDirection: 'column' as const, gap: '0.1rem', flex: 1 },
-  fileName:    { fontSize: '0.88rem', fontWeight: 600, color: '#0d3a1b' },
-  fileSize:    { fontSize: '0.72rem', color: '#6b6b6b' },
-  removeBtn:   { background: '#fdf0f0', border: '1px solid rgba(139,26,26,0.2)', color: '#8b1a1a', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, padding: '0.3rem 0.6rem', borderRadius: '4px', flexShrink: 0, fontFamily: 'inherit' },
-  btn:         { width: '100%', padding: '0.75rem', background: '#1b5e30', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600, transition: 'opacity 0.15s' },
-  statusHint:  { textAlign: 'center' as const, fontSize: '0.78rem', color: '#6b6b6b', marginTop: '0.75rem' },
+  pageTitle:   { fontFamily: "'DM Serif Display', serif", fontSize: '1.65rem', fontWeight: 400, color: '#0d3d20', marginBottom: '0.4rem' },
+  pageDesc:    { fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.65 },
+
+  card:        { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.4rem' },
+
+  errorBox:    { display: 'flex', alignItems: 'flex-start', gap: '0.5rem', background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.83rem', color: '#8b1a1a', lineHeight: 1.5 },
+  errorIcon:   { flexShrink: 0, fontWeight: 700 },
+
+  field:       { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  label:       { fontSize: '0.72rem', fontWeight: 700, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const },
+  labelHint:   { fontWeight: 400, color: '#6b7280', textTransform: 'none' as const, letterSpacing: 0 },
+
+  emptyNote:   { fontSize: '0.83rem', color: '#7a5500', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '10px', padding: '0.7rem 1rem' },
+
+  select:      { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '10px', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+
+  subjectRow:  { display: 'flex', gap: '0.6rem' },
+  subjectBtn:  { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', padding: '0.6rem 0.5rem', borderRadius: '10px', fontSize: '0.85rem', fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'all 0.15s' },
+
+  divider:     { borderTop: '1px solid rgba(26,122,64,0.1)', margin: '0.1rem 0' },
+
+  input:       { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '10px', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+
+  infoBox:     { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.15)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.82rem', color: '#0d3d20', lineHeight: 1.6 },
+  infoIcon:    { flexShrink: 0, fontWeight: 700, fontSize: '0.9rem', marginTop: '1px' },
+
+  tabRow:      { display: 'flex', gap: '0.5rem' },
+  tab:         { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.55rem 0.75rem', border: '1.5px solid', borderRadius: '10px', fontSize: '0.83rem', fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'all 0.15s' },
+  tabBadge:    { background: '#1a7a40', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '8px' },
+
+  textarea:    { width: '100%', padding: '0.75rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '10px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', resize: 'vertical' as const, lineHeight: 1.7, boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  charRow:     { display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginTop: '0.3rem' },
+
+  dropZone:    { border: '2px dashed rgba(26,122,64,0.25)', borderRadius: '12px', padding: '2.5rem 1rem', textAlign: 'center' as const, cursor: 'pointer', background: '#fdfaf5', transition: 'all 0.15s' },
+
+  filePreview: { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '12px', padding: '0.9rem 1rem' },
+  fileIconWrap:{ fontSize: '1.5rem', flexShrink: 0 },
+  fileInfo:    { display: 'flex', flexDirection: 'column' as const, gap: '0.1rem', flex: 1, minWidth: 0 },
+  fileName:    { fontSize: '0.88rem', fontWeight: 700, color: '#0d3d20', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  fileSize:    { fontSize: '0.72rem', color: '#6b7280' },
+  removeBtn:   { flexShrink: 0, background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', color: '#8b1a1a', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, padding: '0.3rem 0.65rem', borderRadius: '7px', fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'background 0.15s' },
+
+  publishRow:       { display: 'flex', alignItems: 'flex-start', gap: '0.9rem', background: '#fdfaf5', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '12px', padding: '1rem 1.1rem' },
+  publishToggleWrap:{ paddingTop: '2px', flexShrink: 0 },
+  checkbox:         { display: 'none' },
+  toggleTrack:      { width: '38px', height: '22px', borderRadius: '11px', cursor: 'pointer', position: 'relative' as const, transition: 'background 0.2s', flexShrink: 0 },
+  toggleThumb:      { position: 'absolute' as const, top: '3px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', transition: 'transform 0.2s' },
+  publishLabel:     { fontSize: '0.88rem', fontWeight: 700, color: '#1a1f16', cursor: 'pointer', display: 'block', marginBottom: '0.2rem' },
+  publishHint:      { fontSize: '0.78rem', color: '#6b7280', lineHeight: 1.5 },
+
+  submitBtn:   { width: '100%', padding: '0.85rem', background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.95rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'background 0.15s', letterSpacing: '0.01em' },
+  statusHint:  { textAlign: 'center' as const, fontSize: '0.78rem', color: '#6b7280', marginTop: '0.5rem' },
 }
