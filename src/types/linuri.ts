@@ -40,6 +40,7 @@ export interface Lesson {
   skill_name: string
   lesson_text: string
   difficulty_level: Difficulty
+  file_url?: string     
   is_published: boolean
   created_at: string
 }
