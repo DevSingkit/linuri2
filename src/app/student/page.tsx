@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/layout'
-import { supabase, getMasteryByStudent, getClassesByTeacher } from '@/lib/supabase'
+import { supabase, getMasteryByStudent } from '@/lib/supabase'
 import type { MasteryRecord } from '@/types/linuri'
 
 interface EnrolledClass {
@@ -11,10 +11,21 @@ interface EnrolledClass {
   classes: { name: string; section: string; join_code: string } | null
 }
 
+interface LessonRow {
+  id: string
+  title: string
+  subject: string
+  skill_name: string
+  difficulty_level: string
+  file_url?: string
+  classes: { name: string; section: string } | null
+}
+
 export default function StudentDashboardPage() {
   const router = useRouter()
 
   const [name, setName]           = useState('')
+  const [lessons, setLessons] = useState<LessonRow[]>([])
   const [classes, setClasses]     = useState<EnrolledClass[]>([])
   const [mastery, setMastery]     = useState<MasteryRecord[]>([])
   const [loading, setLoading]     = useState(true)
@@ -42,6 +53,21 @@ export default function StudentDashboardPage() {
 
         setClasses((enrollData as unknown as EnrolledClass[]) ?? [])
 
+        
+        // Get lessons for enrolled classes
+        const classIds = ((enrollData as unknown as EnrolledClass[]) ?? []).map(e => e.class_id)
+        let lessonRows: LessonRow[] = []
+        if (classIds.length > 0) {
+          const { data: lessonData } = await supabase
+            .from('lessons')
+            .select('id, title, subject, skill_name, difficulty_level, file_url, classes(name, section)')
+            .in('class_id', classIds)
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
+            .limit(6)
+          lessonRows = (lessonData as unknown as LessonRow[]) ?? []
+        }
+        setLessons(lessonRows)
         // Get mastery records
         const { data: masteryData } = await getMasteryByStudent(user.id)
         setMastery(masteryData ?? [])
@@ -116,6 +142,65 @@ export default function StudentDashboardPage() {
             View My Progress
           </button>
         </div>
+        {/* Available Lessons */}
+          <section style={s.section}>
+            <h2 style={s.sectionTitle}>Available Lessons</h2>
+            {lessons.length === 0 ? (
+              <div style={s.empty}>No lessons published yet.</div>
+            ) : (
+              <div style={s.classGrid}>
+                {lessons.map(lesson => (
+                  <div key={lesson.id} style={s.lessonCard}>
+                    <div style={s.lessonCardTop}>
+                      <span style={{
+                        ...s.subjectPill,
+                        background: lesson.subject === 'English' ? '#eef4ff'
+                          : lesson.subject === 'Mathematics' ? '#fdf0f0' : '#f0f7f2',
+                        color: lesson.subject === 'English' ? '#1a56b0'
+                          : lesson.subject === 'Mathematics' ? '#8b1a1a' : '#1b5e30',
+                      }}>
+                        {lesson.subject}
+                      </span>
+                      <span style={{
+                        ...s.subjectPill,
+                        background: lesson.difficulty_level === 'Advanced' ? '#fdf0f0'
+                          : lesson.difficulty_level === 'Standard' ? '#fdf8ee' : '#f0f7f2',
+                        color: lesson.difficulty_level === 'Advanced' ? '#8b1a1a'
+                          : lesson.difficulty_level === 'Standard' ? '#7a5a00' : '#1b5e30',
+                      }}>
+                        {lesson.difficulty_level}
+                      </span>
+                    </div>
+                    <span style={s.lessonTitle}>{lesson.title}</span>
+                    <span style={s.lessonSkill}>Skill: {lesson.skill_name}</span>
+                    {lesson.file_url && (
+                      <a
+                        href={lesson.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={s.fileLink}
+                      >
+                        📎 Download lesson file
+                      </a>
+                    )}
+                    <button
+                      style={s.btnStart}
+                      onClick={() => router.push(`/student/quiz?lesson_id=${lesson.id}`)}
+                    >
+                      Start Quiz →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {lessons.length >= 6 && (
+              <button style={s.seeAll} onClick={() => router.push('/student/lessons')}>
+                See all lessons →
+              </button>
+            )}
+          </section>
+
+          
 
         {/* Enrolled classes */}
         <section style={s.section}>
@@ -185,6 +270,13 @@ export default function StudentDashboardPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
+  lessonCard:    { background: '#fff', border: '1px solid rgba(27,94,48,0.12)', borderRadius: '10px', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' },
+  lessonCardTop: { display: 'flex', gap: '0.4rem', flexWrap: 'wrap' },
+  lessonTitle:   { fontWeight: 600, fontSize: '0.95rem', color: '#0d3a1b', lineHeight: 1.3 },
+  lessonSkill:   { fontSize: '0.75rem', color: '#6b6b6b' },
+  subjectPill:   { fontSize: '0.65rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: '4px' },
+  fileLink:      { fontSize: '0.75rem', color: '#1b5e30', fontWeight: 600, textDecoration: 'none', background: '#f0f7f2', padding: '0.25rem 0.6rem', borderRadius: '4px', alignSelf: 'flex-start' },
+  btnStart:      { marginTop: '0.25rem', background: '#1b5e30', color: '#fff', border: 'none', borderRadius: '7px', padding: '0.55rem', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'inherit' },
   page:          { padding: '2rem', maxWidth: '900px', margin: '0 auto' },
   greeting:      { marginBottom: '1.5rem' },
   heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '1.9rem', color: '#0d3a1b', margin: 0 },

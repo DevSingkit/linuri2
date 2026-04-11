@@ -48,7 +48,7 @@ export default function TeacherReportsPage() {
         const classIds = classList.map(c => c.id)
         const { data, error: mError } = await supabase
           .from('mastery_history')
-          .select('*, users(name)')
+          .select('*, users!mastery_history_student_id_fkey(name)')
           .in('class_id', classIds)
           .order('updated_at', { ascending: false })
         if (mError) throw mError

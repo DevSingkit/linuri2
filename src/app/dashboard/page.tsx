@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -8,25 +7,51 @@ export default function DashboardGate() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      console.log('DASHBOARD USER:', user)        // ← add
-      if (!user) { router.replace('/login'); return }
-      const { data } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-      console.log('DASHBOARD PROFILE:', data)     // ← add
-      if (!data) { router.replace('/login'); return }
-      const dest: Record<string, string> = {
-        teacher: '/teacher',
-        student: '/student',
-        admin:   '/admin',
+    async function redirect() {
+      try {
+        // First try to refresh the session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !session) {
+          await supabase.auth.signOut()
+          router.replace('/login')
+          return
+        }
+
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError || !user) {
+          await supabase.auth.signOut()
+          router.replace('/login')
+          return
+        }
+
+        const { data } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (!data) {
+          router.replace('/login')
+          return
+        }
+
+        const dest: Record<string, string> = {
+          teacher: '/teacher',
+          student: '/student',
+          admin:   '/admin',
+        }
+        router.replace(dest[data.role] ?? '/login')
+      } catch {
+        await supabase.auth.signOut()
+        router.replace('/login')
       }
-      router.replace(dest[data.role] ?? '/login')
-    })
-  }, [])
-  
+    }
+
+    redirect()
+  }, [router])
+
   return (
     <div style={{
       minHeight: '100vh',

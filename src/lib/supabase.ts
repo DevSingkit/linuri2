@@ -125,7 +125,6 @@ export async function upsertMastery(data: Omit<MasteryRecord, 'id'>) {
     .from('mastery_history')
     .upsert(data, { onConflict: 'student_id,lesson_id,skill_name' })
     .select()
-    .single<MasteryRecord>()
 }
 
 export async function getFlaggedStudents(classIds: string[]) {

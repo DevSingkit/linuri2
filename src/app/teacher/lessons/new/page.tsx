@@ -43,6 +43,7 @@ export default function NewLessonPage() {
   const [error, setError]           = useState('')
   const [status, setStatus]         = useState<'idle' | 'uploading' | 'generating' | 'saving'>('idle')
   const fileInputRef                = useRef<HTMLInputElement>(null)
+  const [isPublished, setIsPublished] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -154,7 +155,7 @@ export default function NewLessonPage() {
           skill_name:       skillName.trim(),
           lesson_text:      lessonText.trim(),
           difficulty_level: 'Standard',
-          is_published:     false,
+          is_published:     isPublished,
           ...(fileUrl ? { file_url: fileUrl } : {}),
         })
         .select('id')
@@ -409,6 +410,21 @@ export default function NewLessonPage() {
               style={{ display: 'none' }}
               disabled={busy}
             />
+          </div>
+
+          {/* Publish toggle — add this just above the Submit button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            <input
+              type="checkbox"
+              id="publish"
+              checked={isPublished}
+              onChange={e => setIsPublished(e.target.checked)}
+              disabled={busy}
+              style={{ width: '16px', height: '16px', accentColor: '#1b5e30', cursor: 'pointer' }}
+            />
+            <label htmlFor="publish" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1a1a1a', cursor: 'pointer' }}>
+              Publish immediately (students can see and take quizzes)
+            </label>
           </div>
 
           {/* Submit */}
