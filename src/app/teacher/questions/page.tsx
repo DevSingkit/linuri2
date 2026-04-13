@@ -164,6 +164,15 @@ function QuestionsInner() {
   }
     const handlePublishToggle = async () => {
       setPublishing(true)
+
+      if (!isPublished) {
+        await supabase
+          .from('questions')
+          .update({ is_approved: true })
+          .eq('lesson_id', lessonId)
+        setQuestions(prev => prev.map(q => ({ ...q, is_approved: true })))
+      }
+
       const { error } = await supabase
         .from('lessons')
         .update({ is_published: !isPublished })
@@ -172,7 +181,6 @@ function QuestionsInner() {
       else setError('Failed to update publish status.')
       setPublishing(false)
     }
-
   const grouped = DIFFICULTY_ORDER.reduce<Record<Difficulty, Question[]>>(
     (acc, d) => ({ ...acc, [d]: questions.filter(q => q.difficulty === d) }),
     { Basic: [], Standard: [], Advanced: [] }
