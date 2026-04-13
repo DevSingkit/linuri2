@@ -51,6 +51,8 @@ function QuestionsInner() {
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null)
   const [savingId, setSavingId]           = useState<string | null>(null)
   const [error, setError]                 = useState('')
+  const [isPublished, setIsPublished] = useState(false)
+  const [publishing, setPublishing]   = useState(false)
 
   useEffect(() => {
     if (!lessonId) { setLoading(false); return }
@@ -59,6 +61,7 @@ function QuestionsInner() {
 
   const fetchQuestions = async () => {
     setLoading(true)
+    
     const { data, error } = await supabase
       .from('questions')
       .select('*')
@@ -67,7 +70,16 @@ function QuestionsInner() {
       .order('created_at')
     if (error) setError(error.message)
     else setQuestions(data ?? [])
+    
     setLoading(false)
+
+    const { data: lesson } = await supabase
+      .from('lessons')
+      .select('is_published')
+      .eq('id', lessonId)
+      .single()
+    if (lesson) setIsPublished(lesson.is_published)
+
   }
 
   const handleApprove = async (q: Question) => {
@@ -150,6 +162,16 @@ function QuestionsInner() {
     const { error } = await supabase.from('questions').update({ is_approved: true }).in('id', ids)
     if (!error) setQuestions(prev => prev.map(x => ({ ...x, is_approved: true })))
   }
+    const handlePublishToggle = async () => {
+      setPublishing(true)
+      const { error } = await supabase
+        .from('lessons')
+        .update({ is_published: !isPublished })
+        .eq('id', lessonId)
+      if (!error) setIsPublished(v => !v)
+      else setError('Failed to update publish status.')
+      setPublishing(false)
+    }
 
   const grouped = DIFFICULTY_ORDER.reduce<Record<Difficulty, Question[]>>(
     (acc, d) => ({ ...acc, [d]: questions.filter(q => q.difficulty === d) }),
@@ -213,12 +235,24 @@ function QuestionsInner() {
             </div>
             {approvedCount < totalCount && totalCount > 0 && (
               <button
-                className="qr-approve-all"
-                onClick={handleApproveAll}
-                style={s.approveAllBtn}
-              >
-                Approve all
-              </button>
+              onClick={handlePublishToggle}
+              disabled={publishing}
+              style={{
+                background:   isPublished ? '#fff0f0' : '#f0a500',
+                color:        isPublished ? '#8b1a1a' : '#0d3d20',
+                border:       isPublished ? '1.5px solid rgba(139,26,26,0.2)' : 'none',
+                borderRadius: '9px',
+                padding:      '0.5rem 1.1rem',
+                fontSize:     '0.82rem',
+                fontWeight:   700,
+                fontFamily:   "'Plus Jakarta Sans', sans-serif",
+                cursor:       publishing ? 'not-allowed' : 'pointer',
+                opacity:      publishing ? 0.6 : 1,
+                transition:   'background 0.15s',
+              }}
+            >
+              {publishing ? '…' : isPublished ? 'Unpublish' : '🚀 Publish lesson'}
+            </button>
             )}
           </div>
         </div>
