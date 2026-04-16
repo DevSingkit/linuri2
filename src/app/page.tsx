@@ -747,7 +747,7 @@ export default function LandingPage() {
               Every student learns at their <em>own pace.</em>
             </h1>
             <p className="lp-hero-sub">
-              LINURI tracks mastery in English, Mathematics, and Science for Grade 6 students — then adapts the difficulty so no one is left behind.
+              LINURI tracks students' activity in subjects — then adapts the difficulty so that the teacher can have a better understanding of each student's progress.
             </p>
             <div className="lp-hero-btns">
               <button className="btn-hero-prim" onClick={() => router.push('/register')}>
@@ -758,7 +758,7 @@ export default function LandingPage() {
               </button>
             </div>
             <div className="lp-hero-badges">
-              {['Grade 6 Curriculum', 'Real-Time Mastery Tracking', 'Gemini AI-Powered Hints', 'Caloocan City'].map(b => (
+              {['Flexibility', ' Mastery Tracking', 'Learning Hints', 'Adaptive Difficulty'].map(b => (
                 <span key={b} className="lp-badge">
                   <span className="lp-badge-dot" />
                   {b}
@@ -770,9 +770,11 @@ export default function LandingPage() {
 
         {/* ── SUBJECT CHIPS ── */}
         <div className="lp-subjects">
-          <div className="lp-subj lp-subj-en">📖 English</div>
-          <div className="lp-subj lp-subj-ma">🔢 Mathematics</div>
-          <div className="lp-subj lp-subj-sc">🔬 Science</div>
+          <div className="lp-subj lp-subj-en">English</div>
+          <div className="lp-subj lp-subj-ma">Mathematics</div>
+          <div className="lp-subj lp-subj-sc">Science</div>
+          <div className="lp-subj lp-subj-ma">Aralin Panlipunan</div>
+          <div className="lp-subj lp-subj-en">Others</div>
         </div>
 
         {/* ── SCHOOL STRIP ── */}
@@ -781,7 +783,7 @@ export default function LandingPage() {
           <span className="lp-school-sep" />
           <span className="lp-school-name">United Methodist Cooperative Learning System, Inc.</span>
           <span className="lp-school-sep" />
-          <span className="lp-school-label">Caloocan City · Immaculada Concepcion College of Soldiers Hills</span>
+          <span className="lp-school-label">Caloocan City</span>
         </div>
 
         {/* ── FEATURES ── */}
@@ -847,7 +849,7 @@ export default function LandingPage() {
             {[
               {
                 av: 'av-s', icon: '👦', role: 'Student', sub: 'Self-register',
-                items: ['Take adaptive quizzes in English, Math, and Science', 'Get AI-powered hints when stuck', 'Track personal mastery progress over time', 'Enrol in class with a join code'],
+                items: ['Take adaptive quizzes in Any Subject', 'Get AI-powered hints for some help without giving out the answer', 'Track personal mastery progress over time', 'Enrol in class with a join code'],
               },
               {
                 av: 'av-t', icon: '👩‍🏫', role: 'Teacher', sub: 'Self-register',
@@ -904,7 +906,7 @@ export default function LandingPage() {
         <div className="lp-cta">
           <h2>Ready to start your<br />adaptive learning journey?</h2>
           <p>
-            Join the students and teachers of United Methodist Cooperative Learning System, Inc. already using LINURI.
+            Join the students and teachers of United Methodist Cooperative Learning System, Inc.
           </p>
           <div className="lp-cta-btns">
             <button className="btn-hero-prim" onClick={() => router.push('/register')}>
