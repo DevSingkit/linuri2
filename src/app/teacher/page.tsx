@@ -125,7 +125,7 @@ export default function TeacherDashboard() {
   return (
     <AppLayout title="Teacher Dashboard">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
         @keyframes td-spin  { to { transform: rotate(360deg); } }
         @keyframes td-fade  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -197,7 +197,7 @@ export default function TeacherDashboard() {
             <div style={s.empty}>
               <span style={{ fontSize: '2.5rem' }}>🏫</span>
               <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20' }}>No classes yet.</p>
-              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>
                 <span
                   className="td-link"
                   style={s.link}
@@ -231,7 +231,6 @@ export default function TeacherDashboard() {
                       </div>
                     </div>
 
-                    {/* Stacked bar */}
                     <div style={s.bar}>
                       {cls.total === 0 ? (
                         <div style={{ ...s.barSeg, width: '100%', background: '#e5e7eb' }} />
@@ -250,7 +249,6 @@ export default function TeacherDashboard() {
                       )}
                     </div>
 
-                    {/* Legend */}
                     <div style={s.barLegend}>
                       <span style={s.legendItem}><span style={{ ...s.dot, background: '#1a7a40' }} />{cls.mastered} Mastered</span>
                       <span style={s.legendItem}><span style={{ ...s.dot, background: '#d4a017' }} />{cls.developing} Developing</span>
@@ -280,7 +278,7 @@ export default function TeacherDashboard() {
             <div style={s.empty}>
               <span style={{ fontSize: '2.5rem' }}>🎉</span>
               <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20' }}>No flagged students!</p>
-              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>All students are progressing well.</p>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>All students are progressing well.</p>
             </div>
           ) : (
             <div className="td-content" style={s.tableWrap}>
@@ -333,56 +331,54 @@ export default function TeacherDashboard() {
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const s: Record<string, React.CSSProperties> = {
-  page:          { padding: '2rem', maxWidth: '1000px', margin: '0 auto', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  page:          { padding: '2.5rem', maxWidth: '1000px', margin: '0 auto', fontFamily: "'Inter', sans-serif" },
   topRow:        { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' },
-  breadcrumb:    { fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
-  heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '2rem', color: '#0d3d20', margin: '0 0 0.25rem' },
-  muted:         { color: '#6b7280', fontSize: '0.875rem', margin: 0 },
+  breadcrumb:    { fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
+  heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '2.1rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  muted:         { color: '#6b7280', fontSize: '0.95rem', margin: 0 },
   quickLinks:    { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' as const, alignItems: 'center' },
-  btnGold:       { background: '#f0a500', color: '#0d3d20', border: 'none', borderRadius: '9px', padding: '0.65rem 1.35rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(240,165,0,0.25)', transition: 'background 0.15s, transform 0.15s' },
-  btnOutline:    { background: '#fff', color: '#0d3d20', border: '1.5px solid rgba(26,122,64,0.35)', borderRadius: '9px', padding: '0.6rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' },
+  btnGold:       { background: '#f0a500', color: '#0d3d20', border: 'none', borderRadius: '9px', padding: '0.75rem 1.5rem', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(240,165,0,0.25)', transition: 'background 0.15s, transform 0.15s' },
+  btnOutline:    { background: '#fff', color: '#0d3d20', border: '1.5px solid rgba(26,122,64,0.35)', borderRadius: '9px', padding: '0.7rem 1.4rem', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' },
 
-  statGrid:      { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.75rem', marginBottom: '2rem' },
-  statCard:      { borderRadius: '18px', padding: '1.2rem 0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', cursor: 'default' },
-  statIcon:      { fontSize: '1.5rem', lineHeight: 1 },
-  statNum:       { fontSize: '1.85rem', fontWeight: 800, lineHeight: 1, marginTop: '0.2rem' },
-  statLabel:     { fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginTop: '0.2rem', textAlign: 'center' as const },
+  statGrid:      { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.75rem', marginBottom: '2rem' },
+  statCard:      { borderRadius: '18px', padding: '1.35rem 0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', cursor: 'default' },
+  statIcon:      { fontSize: '1.6rem', lineHeight: 1 },
+  statNum:       { fontSize: '2rem', fontWeight: 800, lineHeight: 1, marginTop: '0.2rem' },
+  statLabel:     { fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginTop: '0.2rem', textAlign: 'center' as const },
 
   section:       { marginBottom: '2.5rem' },
   sectionHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' },
-  sectionTitle:  { fontFamily: "'DM Serif Display', serif", fontSize: '1.25rem', color: '#0d3d20', margin: 0 },
-  countBadge:    { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.03em' },
+  sectionTitle:  { fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0d3d20', margin: 0 },
+  countBadge:    { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.75rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.03em' },
 
-  classGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1rem' },
-  classCard:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', cursor: 'default' },
+  classGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' },
+  classCard:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '1.35rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', cursor: 'default' },
   classCardTop:  { display: 'flex', alignItems: 'flex-start', gap: '0.75rem' },
-  classIconWrap: { fontSize: '1.3rem', flexShrink: 0, marginTop: '1px' },
-  classCardName: { fontWeight: 700, fontSize: '0.92rem', color: '#0d3d20', lineHeight: 1.3 },
-  classCardSub:  { fontSize: '0.75rem', color: '#6b7280', marginTop: '0.2rem' },
-  mastPctBadge:  { fontSize: '0.75rem', fontWeight: 800, padding: '3px 9px', borderRadius: '20px', flexShrink: 0, whiteSpace: 'nowrap' as const },
-  bar:           { height: '12px', borderRadius: '99px', background: '#e5e7eb', display: 'flex', overflow: 'hidden' },
+  classIconWrap: { fontSize: '1.4rem', flexShrink: 0, marginTop: '1px' },
+  classCardName: { fontWeight: 700, fontSize: '0.97rem', color: '#0d3d20', lineHeight: 1.3 },
+  classCardSub:  { fontSize: '0.82rem', color: '#6b7280', marginTop: '0.2rem' },
+  mastPctBadge:  { fontSize: '0.8rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px', flexShrink: 0, whiteSpace: 'nowrap' as const },
+  bar:           { height: '13px', borderRadius: '99px', background: '#e5e7eb', display: 'flex', overflow: 'hidden' },
   barSeg:        { height: '100%', transition: 'width 0.4s ease' },
-  barLegend:     { display: 'flex', gap: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' as const, color: '#4b5563', fontWeight: 500 },
+  barLegend:     { display: 'flex', gap: '0.75rem', fontSize: '0.78rem', flexWrap: 'wrap' as const, color: '#4b5563', fontWeight: 500 },
   legendItem:    { display: 'flex', alignItems: 'center', gap: '0.35rem' },
-  dot:           { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, display: 'inline-block' },
+  dot:           { width: '9px', height: '9px', borderRadius: '50%', flexShrink: 0, display: 'inline-block' },
 
   tableWrap:     { borderRadius: '16px', overflow: 'hidden', border: '1.5px solid rgba(26,122,64,0.13)', boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
-  table:         { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
-  th:            { textAlign: 'left' as const, padding: '0.75rem 1rem', background: '#0d3d20', color: '#ffd166', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const, fontWeight: 700 },
+  table:         { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.95rem' },
+  th:            { textAlign: 'left' as const, padding: '0.85rem 1.1rem', background: '#0d3d20', color: '#ffd166', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const, fontWeight: 700 },
   trEven:        { background: '#fff' },
   trOdd:         { background: '#fdfaf5' },
-  td:            { padding: '0.75rem 1rem', borderBottom: '1px solid rgba(26,122,64,0.08)', color: '#1a1f16', verticalAlign: 'middle' as const },
+  td:            { padding: '0.85rem 1.1rem', borderBottom: '1px solid rgba(26,122,64,0.08)', color: '#1a1f16', verticalAlign: 'middle' as const },
   avatarRow:     { display: 'flex', alignItems: 'center', gap: '0.6rem' },
-  avatarDot:     { width: '30px', height: '30px', borderRadius: '50%', background: '#eaf6ef', color: '#0d5c28', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 },
-  pill:          { fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '6px', display: 'inline-block' },
-  regBadge:      { background: '#fff0f0', color: '#8b1a1a', fontWeight: 700, padding: '2px 10px', borderRadius: '6px', fontSize: '0.82rem', display: 'inline-block' },
+  avatarDot:     { width: '34px', height: '34px', borderRadius: '50%', background: '#eaf6ef', color: '#0d5c28', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.82rem', flexShrink: 0 },
+  pill:          { fontSize: '0.78rem', fontWeight: 700, padding: '0.28rem 0.7rem', borderRadius: '6px', display: 'inline-block' },
+  regBadge:      { background: '#fff0f0', color: '#8b1a1a', fontWeight: 700, padding: '3px 12px', borderRadius: '6px', fontSize: '0.88rem', display: 'inline-block' },
 
   empty:         { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '3rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' as const },
   link:          { color: '#1a7a40', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline', transition: 'opacity 0.15s' },
   center:        { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
   errorCard:     { background: '#fff0f0', border: '1.5px solid rgba(155,28,28,0.18)', borderRadius: '18px', padding: '2.5rem 3rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' },
-  spinner:       { width: '40px', height: '40px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'td-spin 0.8s linear infinite' },
+  spinner:       { width: '42px', height: '42px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'td-spin 0.8s linear infinite' },
 }

@@ -44,15 +44,15 @@ function QuestionsInner() {
   const searchParams = useSearchParams()
   const lessonId = searchParams.get('lesson_id') ?? ''
 
-  const [questions, setQuestions]         = useState<Question[]>([])
-  const [loading, setLoading]             = useState(true)
-  const [editingId, setEditingId]         = useState<string | null>(null)
-  const [editState, setEditState]         = useState<EditState | null>(null)
+  const [questions, setQuestions]           = useState<Question[]>([])
+  const [loading, setLoading]               = useState(true)
+  const [editingId, setEditingId]           = useState<string | null>(null)
+  const [editState, setEditState]           = useState<EditState | null>(null)
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null)
-  const [savingId, setSavingId]           = useState<string | null>(null)
-  const [error, setError]                 = useState('')
-  const [isPublished, setIsPublished] = useState(false)
-  const [publishing, setPublishing]   = useState(false)
+  const [savingId, setSavingId]             = useState<string | null>(null)
+  const [error, setError]                   = useState('')
+  const [isPublished, setIsPublished]       = useState(false)
+  const [publishing, setPublishing]         = useState(false)
 
   useEffect(() => {
     if (!lessonId) { setLoading(false); return }
@@ -61,7 +61,6 @@ function QuestionsInner() {
 
   const fetchQuestions = async () => {
     setLoading(true)
-    
     const { data, error } = await supabase
       .from('questions')
       .select('*')
@@ -70,7 +69,6 @@ function QuestionsInner() {
       .order('created_at')
     if (error) setError(error.message)
     else setQuestions(data ?? [])
-    
     setLoading(false)
 
     const { data: lesson } = await supabase
@@ -79,7 +77,6 @@ function QuestionsInner() {
       .eq('id', lessonId)
       .single()
     if (lesson) setIsPublished(lesson.is_published)
-
   }
 
   const handleApprove = async (q: Question) => {
@@ -156,31 +153,21 @@ function QuestionsInner() {
     setRegeneratingId(null)
   }
 
-  const handleApproveAll = async () => {
-    const ids = questions.filter(q => !q.is_approved).map(q => q.id)
-    if (ids.length === 0) return
-    const { error } = await supabase.from('questions').update({ is_approved: true }).in('id', ids)
-    if (!error) setQuestions(prev => prev.map(x => ({ ...x, is_approved: true })))
-  }
-    const handlePublishToggle = async () => {
-      setPublishing(true)
-
-      if (!isPublished) {
-        await supabase
-          .from('questions')
-          .update({ is_approved: true })
-          .eq('lesson_id', lessonId)
-        setQuestions(prev => prev.map(q => ({ ...q, is_approved: true })))
-      }
-
-      const { error } = await supabase
-        .from('lessons')
-        .update({ is_published: !isPublished })
-        .eq('id', lessonId)
-      if (!error) setIsPublished(v => !v)
-      else setError('Failed to update publish status.')
-      setPublishing(false)
+  const handlePublishToggle = async () => {
+    setPublishing(true)
+    if (!isPublished) {
+      await supabase.from('questions').update({ is_approved: true }).eq('lesson_id', lessonId)
+      setQuestions(prev => prev.map(q => ({ ...q, is_approved: true })))
     }
+    const { error } = await supabase
+      .from('lessons')
+      .update({ is_published: !isPublished })
+      .eq('id', lessonId)
+    if (!error) setIsPublished(v => !v)
+    else setError('Failed to update publish status.')
+    setPublishing(false)
+  }
+
   const grouped = DIFFICULTY_ORDER.reduce<Record<Difficulty, Question[]>>(
     (acc, d) => ({ ...acc, [d]: questions.filter(q => q.difficulty === d) }),
     { Basic: [], Standard: [], Advanced: [] }
@@ -192,7 +179,7 @@ function QuestionsInner() {
   return (
     <AppLayout title="Question Review">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
         :root {
           --green:       #1a7a40;
           --green-dark:  #0d3d20;
@@ -241,26 +228,26 @@ function QuestionsInner() {
             }}>
               {approvedCount === totalCount && totalCount > 0 ? '✓ ' : ''}{approvedCount} / {totalCount} approved
             </div>
-            {approvedCount < totalCount && totalCount > 0 && (
+            {totalCount > 0 && (
               <button
-              onClick={handlePublishToggle}
-              disabled={publishing}
-              style={{
-                background:   isPublished ? '#fff0f0' : '#f0a500',
-                color:        isPublished ? '#8b1a1a' : '#0d3d20',
-                border:       isPublished ? '1.5px solid rgba(139,26,26,0.2)' : 'none',
-                borderRadius: '9px',
-                padding:      '0.5rem 1.1rem',
-                fontSize:     '0.82rem',
-                fontWeight:   700,
-                fontFamily:   "'Plus Jakarta Sans', sans-serif",
-                cursor:       publishing ? 'not-allowed' : 'pointer',
-                opacity:      publishing ? 0.6 : 1,
-                transition:   'background 0.15s',
-              }}
-            >
-              {publishing ? '…' : isPublished ? 'Unpublish' : '🚀 Publish lesson'}
-            </button>
+                onClick={handlePublishToggle}
+                disabled={publishing}
+                style={{
+                  background:   isPublished ? '#fff0f0' : '#f0a500',
+                  color:        isPublished ? '#8b1a1a' : '#0d3d20',
+                  border:       isPublished ? '1.5px solid rgba(139,26,26,0.2)' : 'none',
+                  borderRadius: '9px',
+                  padding:      '0.6rem 1.25rem',
+                  fontSize:     '0.95rem',
+                  fontWeight:   700,
+                  fontFamily:   "'Inter', sans-serif",
+                  cursor:       publishing ? 'not-allowed' : 'pointer',
+                  opacity:      publishing ? 0.6 : 1,
+                  transition:   'background 0.15s',
+                }}
+              >
+                {publishing ? '…' : isPublished ? 'Unpublish' : '🚀 Publish lesson'}
+              </button>
             )}
           </div>
         </div>
@@ -274,7 +261,7 @@ function QuestionsInner() {
         {!lessonId && (
           <div style={s.emptyState}>
             <p style={{ fontWeight: 700, color: 'var(--green-dark)', marginBottom: '0.35rem' }}>No lesson selected</p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
               Go to{' '}
               <a href="/teacher/lessons/new" style={{ color: 'var(--green)', fontWeight: 600 }}>
                 New Lesson
@@ -287,7 +274,7 @@ function QuestionsInner() {
         {loading && (
           <div style={s.loadingWrap}>
             <div style={s.spinner} />
-            <span style={{ fontSize: '0.875rem', color: 'var(--muted)' }}>Loading questions…</span>
+            <span style={{ fontSize: '0.95rem', color: 'var(--muted)' }}>Loading questions…</span>
           </div>
         )}
 
@@ -297,7 +284,6 @@ function QuestionsInner() {
           return (
             <div key={diff} style={s.group}>
 
-              {/* Group header */}
               <div style={s.groupHeader}>
                 <span style={{ ...s.diffBadge, background: dc.bg, color: dc.text, border: `1.5px solid ${dc.border}` }}>
                   {diff}
@@ -335,7 +321,6 @@ function QuestionsInner() {
                       opacity: isSaving ? 0.65 : 1,
                     }}
                   >
-                    {/* Card top bar */}
                     <div style={s.cardTop}>
                       <span style={s.qNum}>Q{idx + 1}</span>
                       <span style={{ ...s.diffPip, background: dc.bg, color: dc.text, border: `1px solid ${dc.border}` }}>
@@ -345,12 +330,11 @@ function QuestionsInner() {
                         <span style={s.approvedBadge}>✓ Approved</span>
                       )}
                       {isSaving && (
-                        <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: 'auto' }}>Saving…</span>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--muted)', marginLeft: 'auto' }}>Saving…</span>
                       )}
                     </div>
 
                     {isEditing && editState ? (
-                      /* ── EDIT MODE ── */
                       <div>
                         <div style={s.editNote}>
                           Editing will reset approval status for this question.
@@ -382,7 +366,7 @@ function QuestionsInner() {
                           ))}
                         </div>
 
-                        <div style={{ ...s.field, maxWidth: '180px' }}>
+                        <div style={{ ...s.field, maxWidth: '200px' }}>
                           <label style={s.label}>Correct answer</label>
                           <select
                             className="qr-select"
@@ -408,25 +392,15 @@ function QuestionsInner() {
                         </div>
 
                         <div style={s.editActions}>
-                          <button
-                            className="qr-save-btn"
-                            onClick={() => saveEdit(q.id)}
-                            disabled={isSaving}
-                            style={s.saveBtn}
-                          >
+                          <button className="qr-save-btn" onClick={() => saveEdit(q.id)} disabled={isSaving} style={s.saveBtn}>
                             {isSaving ? 'Saving…' : 'Save changes'}
                           </button>
-                          <button
-                            className="qr-action-btn"
-                            onClick={() => { setEditingId(null); setEditState(null) }}
-                            style={s.cancelBtn}
-                          >
+                          <button className="qr-action-btn" onClick={() => { setEditingId(null); setEditState(null) }} style={s.cancelBtn}>
                             Cancel
                           </button>
                         </div>
                       </div>
                     ) : (
-                      /* ── VIEW MODE ── */
                       <div>
                         <p style={s.questionText}>{q.question_text}</p>
 
@@ -463,50 +437,18 @@ function QuestionsInner() {
                         </div>
 
                         <div style={s.actions}>
-                          <button
-                            className="qr-action-btn"
-                            onClick={() => startEdit(q)}
-                            disabled={isSaving}
-                            style={s.actionBtn}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="qr-action-btn"
-                            onClick={() => handleRegenerateHint(q)}
-                            disabled={isRegen || isSaving}
-                            style={{ ...s.actionBtn, opacity: isRegen ? 0.6 : 1 }}
-                          >
+                          <button className="qr-action-btn" onClick={() => startEdit(q)} disabled={isSaving} style={s.actionBtn}>Edit</button>
+                          <button className="qr-action-btn" onClick={() => handleRegenerateHint(q)} disabled={isRegen || isSaving} style={{ ...s.actionBtn, opacity: isRegen ? 0.6 : 1 }}>
                             {isRegen ? 'Regenerating…' : 'Regenerate hint'}
                           </button>
-
                           {q.is_approved ? (
-                            <button
-                              className="qr-action-btn"
-                              onClick={() => handleUnapprove(q)}
-                              disabled={isSaving}
-                              style={s.unapproveBtn}
-                            >
-                              Unapprove
-                            </button>
+                            <button className="qr-action-btn" onClick={() => handleUnapprove(q)} disabled={isSaving} style={s.unapproveBtn}>Unapprove</button>
                           ) : (
-                            <button
-                              className="qr-approve-btn"
-                              onClick={() => handleApprove(q)}
-                              disabled={isSaving}
-                              style={s.approveBtn}
-                            >
+                            <button className="qr-approve-btn" onClick={() => handleApprove(q)} disabled={isSaving} style={s.approveBtn}>
                               {isSaving ? 'Saving…' : '✓ Approve'}
                             </button>
                           )}
-
-                          <button
-                            className="qr-delete-btn"
-                            onClick={() => handleDelete(q.id)}
-                            style={s.deleteBtn}
-                          >
-                            Delete
-                          </button>
+                          <button className="qr-delete-btn" onClick={() => handleDelete(q.id)} style={s.deleteBtn}>Delete</button>
                         </div>
                       </div>
                     )}
@@ -525,7 +467,7 @@ export default function QuestionsPage() {
   return (
     <Suspense fallback={
       <AppLayout title="Question Review">
-        <div style={{ color: '#6b7280', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Loading…</div>
+        <div style={{ color: '#6b7280', fontSize: '0.95rem', fontFamily: "'Inter', sans-serif" }}>Loading…</div>
       </AppLayout>
     }>
       <QuestionsInner />
@@ -534,62 +476,61 @@ export default function QuestionsPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  page: { maxWidth: '800px', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  page: { maxWidth: '800px', fontFamily: "'Inter', sans-serif" },
 
   pageHeader:    { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', gap: '1rem', flexWrap: 'wrap' },
-  pageTitle:     { fontFamily: "'DM Serif Display', serif", fontSize: '1.65rem', fontWeight: 400, color: '#0d3d20', marginBottom: '0.4rem' },
-  pageDesc:      { fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.65 },
+  pageTitle:     { fontFamily: "'DM Serif Display', serif", fontSize: '1.75rem', fontWeight: 400, color: '#0d3d20', marginBottom: '0.4rem' },
+  pageDesc:      { fontSize: '0.95rem', color: '#6b7280', lineHeight: 1.65 },
   headerActions: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 },
 
-  progressPill:  { fontSize: '0.78rem', fontWeight: 700, borderRadius: '20px', padding: '0.35rem 0.9rem', transition: 'all 0.2s' },
-  approveAllBtn: { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.82rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  progressPill:  { fontSize: '0.85rem', fontWeight: 700, borderRadius: '20px', padding: '0.4rem 1rem', transition: 'all 0.2s' },
 
-  errorBox: { display: 'flex', gap: '0.5rem', alignItems: 'flex-start', background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.83rem', color: '#8b1a1a', marginBottom: '1.25rem', lineHeight: 1.5 },
+  errorBox: { display: 'flex', gap: '0.5rem', alignItems: 'flex-start', background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', borderRadius: '10px', padding: '0.85rem 1.1rem', fontSize: '0.9rem', color: '#8b1a1a', marginBottom: '1.25rem', lineHeight: 1.5 },
 
   emptyState: { textAlign: 'center' as const, padding: '2.5rem 2rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px' },
 
   loadingWrap: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.5rem 0' },
-  spinner:     { width: '20px', height: '20px', borderRadius: '50%', border: '3px solid rgba(26,122,64,0.15)', borderTop: '3px solid #1a7a40', animation: 'spin 0.8s linear infinite' },
+  spinner:     { width: '22px', height: '22px', borderRadius: '50%', border: '3px solid rgba(26,122,64,0.15)', borderTop: '3px solid #1a7a40', animation: 'spin 0.8s linear infinite' },
 
   group:       { marginBottom: '2.5rem' },
   groupHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.9rem' },
-  diffBadge:   { fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '0.3rem 0.8rem', borderRadius: '6px' },
+  diffBadge:   { fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '0.35rem 0.9rem', borderRadius: '6px' },
   groupMeta:   { display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 },
-  groupCount:  { fontSize: '0.78rem', color: '#6b7280', whiteSpace: 'nowrap' as const },
-  groupBar:    { flex: 1, height: '4px', borderRadius: '2px', maxWidth: '120px', overflow: 'hidden' },
+  groupCount:  { fontSize: '0.85rem', color: '#6b7280', whiteSpace: 'nowrap' as const },
+  groupBar:    { flex: 1, height: '5px', borderRadius: '2px', maxWidth: '120px', overflow: 'hidden' },
   groupBarFill:{ height: '100%', borderRadius: '2px', transition: 'width 0.3s' },
-  emptyGroup:  { fontSize: '0.83rem', color: '#6b7280', padding: '0.85rem 1rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.1)', borderRadius: '12px' },
+  emptyGroup:  { fontSize: '0.9rem', color: '#6b7280', padding: '0.9rem 1.1rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.1)', borderRadius: '12px' },
 
-  card:    { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '0.85rem' },
-  cardTop: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' },
-  qNum:    { fontSize: '0.7rem', fontWeight: 800, color: '#6b7280', background: '#f5efe3', padding: '0.15rem 0.5rem', borderRadius: '5px', fontFamily: 'monospace' },
-  diffPip: { fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, padding: '0.15rem 0.5rem', borderRadius: '5px' },
-  approvedBadge: { fontSize: '0.68rem', fontWeight: 700, color: '#0d3d20', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.2)', padding: '0.15rem 0.55rem', borderRadius: '5px' },
+  card:    { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '14px', padding: '1.35rem 1.6rem', marginBottom: '0.85rem' },
+  cardTop: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.9rem' },
+  qNum:    { fontSize: '0.75rem', fontWeight: 800, color: '#6b7280', background: '#f5efe3', padding: '0.2rem 0.55rem', borderRadius: '5px', fontFamily: 'monospace' },
+  diffPip: { fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, padding: '0.2rem 0.55rem', borderRadius: '5px' },
+  approvedBadge: { fontSize: '0.72rem', fontWeight: 700, color: '#0d3d20', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.2)', padding: '0.2rem 0.6rem', borderRadius: '5px' },
 
-  questionText: { fontSize: '0.92rem', color: '#1a1f16', lineHeight: 1.65, marginBottom: '0.9rem', fontWeight: 600 },
+  questionText: { fontSize: '0.97rem', color: '#1a1f16', lineHeight: 1.7, marginBottom: '0.9rem', fontWeight: 600 },
 
   optionsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.9rem' },
-  option:      { display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.83rem', padding: '0.55rem 0.75rem', borderRadius: '9px', lineHeight: 1.45 },
-  optLabel:    { flexShrink: 0, fontWeight: 800, fontSize: '0.72rem', padding: '0.1rem 0.45rem', borderRadius: '5px', marginTop: '1px' },
+  option:      { display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem', padding: '0.6rem 0.85rem', borderRadius: '9px', lineHeight: 1.5 },
+  optLabel:    { flexShrink: 0, fontWeight: 800, fontSize: '0.75rem', padding: '0.12rem 0.48rem', borderRadius: '5px', marginTop: '1px' },
 
-  hintBox:  { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '9px', padding: '0.6rem 0.85rem', fontSize: '0.81rem', marginBottom: '1rem' },
-  hintLabel:{ fontWeight: 800, color: '#f0a500', flexShrink: 0, fontSize: '0.65rem', textTransform: 'uppercase' as const, letterSpacing: '0.08em', paddingTop: '2px' },
-  hintText: { color: '#6b7280', lineHeight: 1.55 },
+  hintBox:  { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '9px', padding: '0.7rem 0.95rem', fontSize: '0.88rem', marginBottom: '1rem' },
+  hintLabel:{ fontWeight: 800, color: '#f0a500', flexShrink: 0, fontSize: '0.68rem', textTransform: 'uppercase' as const, letterSpacing: '0.08em', paddingTop: '2px' },
+  hintText: { color: '#6b7280', lineHeight: 1.6 },
 
   actions:      { display: 'flex', gap: '0.45rem', flexWrap: 'wrap' as const, alignItems: 'center' },
-  actionBtn:    { background: '#f5efe3', color: '#1a1f16', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
-  approveBtn:   { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
-  unapproveBtn: { background: '#fff5f5', color: '#8b1a1a', border: '1.5px solid rgba(139,26,26,0.2)', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
-  deleteBtn:    { background: 'none', color: '#6b7280', border: 'none', borderRadius: '7px', padding: '0.38rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', marginLeft: 'auto', transition: 'all 0.15s' },
+  actionBtn:    { background: '#f5efe3', color: '#1a1f16', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '7px', padding: '0.45rem 1rem', fontSize: '0.85rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  approveBtn:   { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '7px', padding: '0.45rem 1rem', fontSize: '0.85rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  unapproveBtn: { background: '#fff5f5', color: '#8b1a1a', border: '1.5px solid rgba(139,26,26,0.2)', borderRadius: '7px', padding: '0.45rem 1rem', fontSize: '0.85rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  deleteBtn:    { background: 'none', color: '#6b7280', border: 'none', borderRadius: '7px', padding: '0.45rem 1rem', fontSize: '0.85rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: 'pointer', marginLeft: 'auto', transition: 'all 0.15s' },
 
-  editNote:      { fontSize: '0.78rem', color: '#7a5500', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '8px', padding: '0.55rem 0.85rem', marginBottom: '1rem' },
-  field:         { marginBottom: '0.9rem' },
-  label:         { display: 'block', fontSize: '0.7rem', fontWeight: 800, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const, marginBottom: '0.4rem' },
-  input:         { width: '100%', padding: '0.6rem 0.85rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
-  textarea:      { width: '100%', padding: '0.6rem 0.85rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', resize: 'vertical' as const, lineHeight: 1.65, boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
-  select:        { width: '100%', padding: '0.6rem 0.85rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  editNote:       { fontSize: '0.85rem', color: '#7a5500', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '8px', padding: '0.6rem 0.95rem', marginBottom: '1rem' },
+  field:          { marginBottom: '0.9rem' },
+  label:          { display: 'block', fontSize: '0.73rem', fontWeight: 800, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const, marginBottom: '0.4rem' },
+  input:          { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.95rem', fontFamily: "'Inter', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  textarea:       { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.95rem', fontFamily: "'Inter', sans-serif", color: '#1a1f16', background: '#fdfaf5', resize: 'vertical' as const, lineHeight: 1.7, boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
+  select:         { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', fontSize: '0.95rem', fontFamily: "'Inter', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
   optionsEditGrid:{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' },
-  editActions:   { display: 'flex', gap: '0.5rem', marginTop: '0.25rem' },
-  saveBtn:       { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.83rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
-  cancelBtn:     { background: '#f5efe3', color: '#1a1f16', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.83rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  editActions:    { display: 'flex', gap: '0.5rem', marginTop: '0.25rem' },
+  saveBtn:        { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '9px', padding: '0.6rem 1.25rem', fontSize: '0.9rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
+  cancelBtn:      { background: '#f5efe3', color: '#1a1f16', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '9px', padding: '0.6rem 1.25rem', fontSize: '0.9rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: 'pointer', transition: 'background 0.15s' },
 }

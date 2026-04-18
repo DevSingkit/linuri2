@@ -55,7 +55,7 @@ export default function TeacherAlertsPage() {
 
   const filtered = alerts.filter(a => {
     const matchSeverity =
-      severityFilter === 'All'      ? true
+      severityFilter === 'All'        ? true
       : severityFilter === 'Critical' ? a.regression_count >= 3
       : a.regression_count === 2
     const matchSearch =
@@ -96,7 +96,7 @@ export default function TeacherAlertsPage() {
   return (
     <AppLayout title="Alerts">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
         @keyframes al-spin { to { transform: rotate(360deg); } }
         @keyframes al-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .al-tr:hover td { background: #f0f9f4 !important; }
@@ -215,7 +215,7 @@ export default function TeacherAlertsPage() {
                           </td>
                           <td style={s.td}>{a.skill_name}</td>
                           <td style={s.td}>
-                            <span style={{ fontSize: '0.82rem' }}>{subjectMeta[a.subject] ?? ''} {a.subject}</span>
+                            <span style={{ fontSize: '0.9rem' }}>{subjectMeta[a.subject] ?? ''} {a.subject}</span>
                           </td>
                           <td style={s.td}>
                             <span style={{ ...s.pill, background: mm.bg, color: mm.color, border: `1px solid ${mm.border}` }}>
@@ -228,12 +228,12 @@ export default function TeacherAlertsPage() {
                               fontWeight: 700,
                               color: isCritical ? '#8b1a1a' : '#7a5500',
                               background: isCritical ? '#fff0f0' : '#fffbf0',
-                              padding: '3px 10px', borderRadius: '6px', fontSize: '0.85rem',
+                              padding: '3px 12px', borderRadius: '6px', fontSize: '0.9rem',
                             }}>
                               {a.regression_count} {isCritical ? '🔴' : '🟡'}
                             </span>
                           </td>
-                          <td style={{ ...s.td, fontSize: '0.8rem', color: '#6b7280' }}>
+                          <td style={{ ...s.td, fontSize: '0.88rem', color: '#6b7280' }}>
                             {new Date(a.updated_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </td>
                         </tr>
@@ -252,40 +252,40 @@ export default function TeacherAlertsPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  page:         { padding: '2rem', maxWidth: '1100px', margin: '0 auto', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  page:         { padding: '2.5rem', maxWidth: '1100px', margin: '0 auto', fontFamily: "'Inter', sans-serif" },
   topRow:       { marginBottom: '2rem' },
-  breadcrumb:   { fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
-  heading:      { fontFamily: "'DM Serif Display', serif", fontSize: '2rem', color: '#0d3d20', margin: '0 0 0.25rem' },
-  muted:        { color: '#6b7280', fontSize: '0.875rem', margin: 0 },
+  breadcrumb:   { fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
+  heading:      { fontFamily: "'DM Serif Display', serif", fontSize: '2.1rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  muted:        { color: '#6b7280', fontSize: '0.95rem', margin: 0 },
   chips:        { display: 'flex', gap: '1rem', flexWrap: 'wrap' as const, marginBottom: '2rem' },
-  chip:         { borderRadius: '18px', padding: '1.1rem 1.25rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.2rem', minWidth: '120px', cursor: 'default' },
-  chipIcon:     { fontSize: '1.4rem', lineHeight: 1 },
-  chipNum:      { fontSize: '1.75rem', fontWeight: 800, lineHeight: 1, marginTop: '0.15rem' },
-  chipLabel:    { fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#6b7280', marginTop: '0.15rem', textAlign: 'center' as const },
+  chip:         { borderRadius: '18px', padding: '1.2rem 1.35rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.2rem', minWidth: '130px', cursor: 'default' },
+  chipIcon:     { fontSize: '1.5rem', lineHeight: 1 },
+  chipNum:      { fontSize: '1.9rem', fontWeight: 800, lineHeight: 1, marginTop: '0.15rem' },
+  chipLabel:    { fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#6b7280', marginTop: '0.15rem', textAlign: 'center' as const },
   successBox:   { background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.25)', borderRadius: '20px', padding: '3.5rem 2rem', textAlign: 'center' as const, boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
-  successTitle: { fontFamily: "'DM Serif Display', serif", fontSize: '1.5rem', color: '#0d3d20', marginBottom: '0.5rem' },
-  successDesc:  { color: '#6b7280', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' },
+  successTitle: { fontFamily: "'DM Serif Display', serif", fontSize: '1.6rem', color: '#0d3d20', marginBottom: '0.5rem' },
+  successDesc:  { color: '#6b7280', fontSize: '0.97rem', maxWidth: '400px', margin: '0 auto' },
   filterRow:    { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' as const, alignItems: 'center', marginBottom: '1rem' },
-  fBtn:         { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.15)', borderRadius: '9px', padding: '0.45rem 1rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', color: '#6b7280', fontFamily: 'inherit', transition: 'background 0.15s, color 0.15s' },
+  fBtn:         { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#fff', border: '1.5px solid rgba(26,122,64,0.15)', borderRadius: '9px', padding: '0.5rem 1.1rem', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', color: '#6b7280', fontFamily: 'inherit', transition: 'background 0.15s, color 0.15s' },
   fBtnActive:   { background: '#0d3d20', color: '#ffd166', borderColor: '#0d3d20' },
   fBtnCritical: { background: '#fff0f0', color: '#8b1a1a', borderColor: 'rgba(155,28,28,0.35)', fontWeight: 700 },
   fBtnWarning:  { background: '#fffbf0', color: '#7a5500', borderColor: 'rgba(200,130,0,0.35)', fontWeight: 700 },
-  badgeRed:     { background: '#8b1a1a', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.45rem', borderRadius: '10px' },
-  badgeGold:    { background: '#d4a017', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.45rem', borderRadius: '10px' },
-  search:       { marginLeft: 'auto', border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '9px', padding: '0.5rem 1rem', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', minWidth: '220px', color: '#1a1f16', background: '#fdfaf5', transition: 'border-color 0.15s' },
+  badgeRed:     { background: '#8b1a1a', color: '#fff', fontSize: '0.68rem', fontWeight: 700, padding: '0.1rem 0.48rem', borderRadius: '10px' },
+  badgeGold:    { background: '#d4a017', color: '#fff', fontSize: '0.68rem', fontWeight: 700, padding: '0.1rem 0.48rem', borderRadius: '10px' },
+  search:       { marginLeft: 'auto', border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '9px', padding: '0.6rem 1.1rem', fontSize: '0.95rem', fontFamily: 'inherit', outline: 'none', minWidth: '220px', color: '#1a1f16', background: '#fdfaf5', transition: 'border-color 0.15s' },
   tableWrap:    { borderRadius: '16px', overflow: 'hidden', border: '1.5px solid rgba(26,122,64,0.13)', boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
-  table:        { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
-  th:           { textAlign: 'left' as const, padding: '0.75rem 1rem', background: '#0d3d20', color: '#ffd166', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const, fontWeight: 700 },
+  table:        { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.95rem' },
+  th:           { textAlign: 'left' as const, padding: '0.85rem 1.1rem', background: '#0d3d20', color: '#ffd166', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const, fontWeight: 700 },
   trEven:       { background: '#fff' },
   trOdd:        { background: '#fdfaf5' },
-  td:           { padding: '0.75rem 1rem', borderBottom: '1px solid rgba(26,122,64,0.08)', color: '#1a1f16', verticalAlign: 'middle' as const },
+  td:           { padding: '0.85rem 1.1rem', borderBottom: '1px solid rgba(26,122,64,0.08)', color: '#1a1f16', verticalAlign: 'middle' as const },
   avatarRow:    { display: 'flex', alignItems: 'center', gap: '0.6rem' },
-  avatarDot:    { width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 },
-  pill:         { fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '6px', display: 'inline-block' },
-  pillCritical: { fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '6px', background: '#fff0f0', color: '#8b1a1a', border: '1px solid rgba(155,28,28,0.18)', display: 'inline-block' },
-  pillWarning:  { fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '6px', background: '#fffbf0', color: '#7a5500', border: '1px solid rgba(200,130,0,0.18)', display: 'inline-block' },
+  avatarDot:    { width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.82rem', flexShrink: 0 },
+  pill:         { fontSize: '0.78rem', fontWeight: 700, padding: '0.28rem 0.7rem', borderRadius: '6px', display: 'inline-block' },
+  pillCritical: { fontSize: '0.78rem', fontWeight: 700, padding: '0.28rem 0.7rem', borderRadius: '6px', background: '#fff0f0', color: '#8b1a1a', border: '1px solid rgba(155,28,28,0.18)', display: 'inline-block' },
+  pillWarning:  { fontSize: '0.78rem', fontWeight: 700, padding: '0.28rem 0.7rem', borderRadius: '6px', background: '#fffbf0', color: '#7a5500', border: '1px solid rgba(200,130,0,0.18)', display: 'inline-block' },
   empty:        { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '3rem 2rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.75rem', textAlign: 'center' as const },
   center:       { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
   errorCard:    { background: '#fff0f0', border: '1.5px solid rgba(155,28,28,0.18)', borderRadius: '18px', padding: '2.5rem 3rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.75rem' },
-  spinner:      { width: '40px', height: '40px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'al-spin 0.8s linear infinite' },
+  spinner:      { width: '42px', height: '42px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'al-spin 0.8s linear infinite' },
 }

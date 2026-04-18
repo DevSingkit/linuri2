@@ -16,12 +16,12 @@ function generateJoinCode(): string {
 export default function TeacherClassesPage() {
   const router = useRouter()
 
-  const [teacherId, setTeacherId] = useState<string | null>(null)
-  const [classes, setClasses]     = useState<ClassWithCount[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
-  const [name, setName]           = useState('')
-  const [section, setSection]     = useState('')
+  const [teacherId, setTeacherId]   = useState<string | null>(null)
+  const [classes, setClasses]       = useState<ClassWithCount[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState<string | null>(null)
+  const [name, setName]             = useState('')
+  const [section, setSection]       = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError]   = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -99,7 +99,7 @@ export default function TeacherClassesPage() {
   return (
     <AppLayout title="My Classes">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
         @keyframes cl-spin  { to { transform: rotate(360deg); } }
         @keyframes cl-fade  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes cl-slide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
@@ -169,15 +169,13 @@ export default function TeacherClassesPage() {
             </button>
           </div>
 
-          {formError && (
-            <div style={s.errorMsg}>⚠️ {formError}</div>
-          )}
+          {formError && <div style={s.errorMsg}>⚠️ {formError}</div>}
           {successMsg && (
             <div className="cl-success" style={s.successBox}>
               <span style={s.successIcon}>✅</span>
               <div>
-                <div style={{ fontWeight: 700, color: '#0d5c28', fontSize: '0.88rem' }}>Class created!</div>
-                <div style={{ fontSize: '0.82rem', color: '#1a7a40', marginTop: '0.15rem' }}>{successMsg}</div>
+                <div style={{ fontWeight: 700, color: '#0d5c28', fontSize: '0.95rem' }}>Class created!</div>
+                <div style={{ fontSize: '0.88rem', color: '#1a7a40', marginTop: '0.15rem' }}>{successMsg}</div>
               </div>
             </div>
           )}
@@ -194,7 +192,7 @@ export default function TeacherClassesPage() {
             <div style={s.empty}>
               <span style={{ fontSize: '2.5rem' }}>🏫</span>
               <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20' }}>No classes yet.</p>
-              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>Create one above to get started.</p>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>Create one above to get started.</p>
             </div>
           ) : (
             <div className="cl-content" style={s.classGrid}>
@@ -237,39 +235,39 @@ export default function TeacherClassesPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  page:          { padding: '2rem', maxWidth: '960px', margin: '0 auto', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  page:          { padding: '2.5rem', maxWidth: '960px', margin: '0 auto', fontFamily: "'Inter', sans-serif" },
   topRow:        { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' },
-  breadcrumb:    { fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
-  heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '2rem', color: '#0d3d20', margin: '0 0 0.25rem' },
-  muted:         { color: '#6b7280', fontSize: '0.875rem', margin: 0 },
-  btnOutline:    { background: '#fff', color: '#0d3d20', border: '1.5px solid rgba(26,122,64,0.35)', borderRadius: '9px', padding: '0.6rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' },
-  formCard:      { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '20px', padding: '1.75rem', marginBottom: '2.5rem', boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
-  formTitle:     { fontFamily: "'DM Serif Display', serif", fontSize: '1.25rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  breadcrumb:    { fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
+  heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '2.1rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  muted:         { color: '#6b7280', fontSize: '0.95rem', margin: 0 },
+  btnOutline:    { background: '#fff', color: '#0d3d20', border: '1.5px solid rgba(26,122,64,0.35)', borderRadius: '9px', padding: '0.7rem 1.4rem', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' },
+  formCard:      { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '20px', padding: '2rem', marginBottom: '2.5rem', boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
+  formTitle:     { fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0d3d20', margin: '0 0 0.25rem' },
   formRow:       { display: 'flex', gap: '1rem', alignItems: 'flex-start', marginTop: '1.25rem', flexWrap: 'wrap' as const },
-  fieldGroup:    { display: 'flex', flexDirection: 'column' as const, gap: '0.4rem', flex: 1, minWidth: '200px' },
-  label:         { fontSize: '0.7rem', fontWeight: 700, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const },
-  input:         { border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '10px', padding: '0.7rem 1rem', fontSize: '0.9rem', fontFamily: 'inherit', color: '#1a1f16', background: '#fdfaf5', transition: 'border-color 0.15s, box-shadow 0.15s' },
-  btnPrimary:    { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.7rem 1.5rem', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' as const },
-  errorMsg:      { color: '#8b1a1a', fontSize: '0.85rem', marginTop: '0.75rem', background: '#fff0f0', border: '1px solid rgba(155,28,28,0.18)', borderRadius: '8px', padding: '0.6rem 1rem' },
-  successBox:    { display: 'flex', alignItems: 'flex-start', gap: '0.75rem', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.25)', borderRadius: '12px', padding: '1rem 1.25rem', marginTop: '1rem' },
-  successIcon:   { fontSize: '1.2rem', flexShrink: 0 },
+  fieldGroup:    { display: 'flex', flexDirection: 'column' as const, gap: '0.45rem', flex: 1, minWidth: '200px' },
+  label:         { fontSize: '0.73rem', fontWeight: 700, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const },
+  input:         { border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '10px', padding: '0.8rem 1.1rem', fontSize: '0.97rem', fontFamily: 'inherit', color: '#1a1f16', background: '#fdfaf5', transition: 'border-color 0.15s, box-shadow 0.15s' },
+  btnPrimary:    { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.8rem 1.6rem', fontWeight: 700, fontSize: '0.97rem', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' as const },
+  errorMsg:      { color: '#8b1a1a', fontSize: '0.9rem', marginTop: '0.75rem', background: '#fff0f0', border: '1px solid rgba(155,28,28,0.18)', borderRadius: '8px', padding: '0.7rem 1.1rem' },
+  successBox:    { display: 'flex', alignItems: 'flex-start', gap: '0.75rem', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.25)', borderRadius: '12px', padding: '1.1rem 1.35rem', marginTop: '1rem' },
+  successIcon:   { fontSize: '1.3rem', flexShrink: 0 },
   section:       { marginBottom: '2rem' },
   sectionHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' },
-  sectionTitle:  { fontFamily: "'DM Serif Display', serif", fontSize: '1.25rem', color: '#0d3d20', margin: 0 },
-  countBadge:    { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '20px' },
-  classGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1rem' },
-  classCard:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '1.25rem', display: 'flex', flexDirection: 'column' as const, gap: '0.9rem', cursor: 'default' },
+  sectionTitle:  { fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0d3d20', margin: 0 },
+  countBadge:    { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.75rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px' },
+  classGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' },
+  classCard:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '1.35rem', display: 'flex', flexDirection: 'column' as const, gap: '0.9rem', cursor: 'default' },
   classCardTop:  { display: 'flex', alignItems: 'flex-start', gap: '0.75rem' },
-  classIconWrap: { fontSize: '1.4rem', flexShrink: 0 },
-  classCardName: { fontWeight: 700, fontSize: '0.95rem', color: '#0d3d20', lineHeight: 1.3 },
-  classCardSub:  { fontSize: '0.75rem', color: '#6b7280', marginTop: '0.2rem' },
-  studentBadge:  { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', borderRadius: '20px', whiteSpace: 'nowrap' as const, flexShrink: 0 },
-  codeRow:       { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#fdfaf5', borderRadius: '10px', padding: '0.65rem 0.9rem', border: '1px solid rgba(26,122,64,0.10)' },
-  codeLabel:     { fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#6b7280' },
-  codeValue:     { background: '#0d3d20', color: '#ffd166', fontFamily: 'monospace', fontSize: '0.92rem', fontWeight: 700, padding: '0.2rem 0.8rem', borderRadius: '6px', letterSpacing: '0.14em', marginLeft: 'auto' },
-  btnSmall:      { background: '#f0a500', color: '#0d3d20', border: 'none', borderRadius: '9px', padding: '0.5rem 1rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', alignSelf: 'flex-start' as const },
+  classIconWrap: { fontSize: '1.5rem', flexShrink: 0 },
+  classCardName: { fontWeight: 700, fontSize: '0.97rem', color: '#0d3d20', lineHeight: 1.3 },
+  classCardSub:  { fontSize: '0.82rem', color: '#6b7280', marginTop: '0.2rem' },
+  studentBadge:  { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.75rem', fontWeight: 700, padding: '5px 11px', borderRadius: '20px', whiteSpace: 'nowrap' as const, flexShrink: 0 },
+  codeRow:       { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#fdfaf5', borderRadius: '10px', padding: '0.75rem 1rem', border: '1px solid rgba(26,122,64,0.10)' },
+  codeLabel:     { fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#6b7280' },
+  codeValue:     { background: '#0d3d20', color: '#ffd166', fontFamily: 'monospace', fontSize: '0.97rem', fontWeight: 700, padding: '0.25rem 0.9rem', borderRadius: '6px', letterSpacing: '0.14em', marginLeft: 'auto' },
+  btnSmall:      { background: '#f0a500', color: '#0d3d20', border: 'none', borderRadius: '9px', padding: '0.55rem 1.1rem', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', alignSelf: 'flex-start' as const },
   empty:         { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '3rem 2rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.75rem', textAlign: 'center' as const },
   center:        { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
   errorCard:     { background: '#fff0f0', border: '1.5px solid rgba(155,28,28,0.18)', borderRadius: '18px', padding: '2.5rem 3rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.75rem' },
-  spinner:       { width: '40px', height: '40px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'cl-spin 0.8s linear infinite' },
+  spinner:       { width: '42px', height: '42px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'cl-spin 0.8s linear infinite' },
 }

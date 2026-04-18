@@ -1,583 +1,273 @@
-// /teacher/lessons/new/page.tsx
+// /teacher/classes/page.tsx
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/layout'
-import { supabase } from '@/lib/supabase'
+import { supabase, getClassesByTeacher, createClass, getStudentsByClass } from '@/lib/supabase'
+import type { Class } from '@/types/linuri'
 
-type Subject = 'English' | 'Mathematics' | 'Science'
-type Difficulty = 'Basic' | 'Standard' | 'Advanced'
+interface ClassWithCount extends Class { studentCount: number }
 
-interface ClassOption {
-  id: string
-  name: string
-  section: string
+function generateJoinCode(): string {
+  return Math.random().toString(36).substring(2, 8).toUpperCase()
 }
 
-interface GeneratedQuestion {
-  difficulty: Difficulty
-  question_text: string
-  option_a: string
-  option_b: string
-  option_c: string
-  option_d: string
-  correct_answer: string
-  hint: string
-}
-
-const SUBJECTS: Subject[] = ['English', 'Mathematics', 'Science']
-const ACCEPTED = '.pdf,.docx,.txt,.png,.jpg,.jpeg,.pptx,.xlsx'
-
-const SUBJECT_ICONS: Record<Subject, string> = {
-  English: '📖',
-  Mathematics: '🔢',
-  Science: '🔬',
-}
-
-export default function NewLessonPage() {
+export default function TeacherClassesPage() {
   const router = useRouter()
 
-  const [classes, setClasses]         = useState<ClassOption[]>([])
-  const [classId, setClassId]         = useState('')
-  const [title, setTitle]             = useState('')
-  const [subject, setSubject]         = useState<Subject>('English')
-  const [skillName, setSkillName]     = useState('')
-  const [lessonText, setLessonText]   = useState('')
-  const [file, setFile]               = useState<File | null>(null)
-  const [activeTab, setActiveTab]     = useState<'text' | 'file'>('text')
-  const [error, setError]             = useState('')
-  const [status, setStatus]           = useState<'idle' | 'uploading' | 'generating' | 'saving'>('idle')
-  const [isPublished, setIsPublished] = useState(false)
-  const fileInputRef                  = useRef<HTMLInputElement>(null)
+  const [teacherId, setTeacherId]   = useState<string | null>(null)
+  const [classes, setClasses]       = useState<ClassWithCount[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState<string | null>(null)
+  const [name, setName]             = useState('')
+  const [section, setSection]       = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError]   = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
-      const { data } = await supabase
-        .from('classes')
-        .select('id, name, section')
-        .eq('teacher_id', user.id)
-        .order('name')
-      if (data) {
-        setClasses(data)
-        if (data.length > 0) setClassId(data[0].id)
+    async function load() {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) { router.replace('/login'); return }
+        setTeacherId(user.id)
+        await fetchClasses(user.id)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load classes.')
+      } finally {
+        setLoading(false)
       }
-    })
-  }, [])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0] ?? null)
-  }
-
-  const removeFile = () => {
-    setFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const switchTab = (tab: 'text' | 'file') => {
-    setActiveTab(tab)
-    if (tab === 'file') fileInputRef.current?.click()
-    else removeFile()
-  }
-
-  const handleSubmit = async () => {
-    setError('')
-    if (!classId)          { setError('Please select a class.'); return }
-    if (!title.trim())     { setError('Lesson title is required.'); return }
-    if (!skillName.trim()) { setError('Skill name is required.'); return }
-    if (!file && lessonText.trim().length < 80) {
-      setError('Lesson text must be at least 80 characters, or upload a file instead.')
-      return
     }
+    load()
+  }, [router])
 
-    const geminiText = lessonText.trim().length >= 80
-      ? lessonText.trim()
-      : `This is a ${subject} lesson about "${skillName}". ` +
-        `The teacher has uploaded a file with the full lesson content. ` +
-        `Please generate grade-appropriate questions based on the skill: ${skillName}.`
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated.')
-
-      let fileUrl: string | null = null
-      if (file) {
-        setStatus('uploading')
-        const ext      = file.name.split('.').pop()
-        const fileName = `${user.id}/${Date.now()}.${ext}`
-        const { error: uploadError } = await supabase.storage
-          .from('lesson-files')
-          .upload(fileName, file, { upsert: false })
-        if (uploadError) throw new Error('File upload failed: ' + uploadError.message)
-        const { data: urlData } = supabase.storage.from('lesson-files').getPublicUrl(fileName)
-        fileUrl = urlData.publicUrl
-      }
-
-      setStatus('generating')
-      const res = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, skillName, lessonText: geminiText }),
+  async function fetchClasses(tid: string) {
+    const { data, error: fetchError } = await getClassesByTeacher(tid)
+    if (fetchError) throw fetchError
+    const classList = data ?? []
+    const withCounts: ClassWithCount[] = await Promise.all(
+      classList.map(async (cls) => {
+        const { data: enrollData } = await getStudentsByClass(cls.id)
+        return { ...cls, studentCount: enrollData?.length ?? 0 }
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? 'Question generation failed.')
-      }
-      const { questions } = await res.json()
-      if (!Array.isArray(questions) || questions.length === 0) {
-        throw new Error('Gemini returned no questions. Try adding lesson text for better results.')
-      }
+    )
+    setClasses(withCounts)
+  }
 
-      setStatus('saving')
-      const { data: lesson, error: lessonError } = await supabase
-        .from('lessons')
-        .insert({
-          class_id:         classId,
-          created_by:       user.id,
-          title:            title.trim(),
-          subject,
-          skill_name:       skillName.trim(),
-          lesson_text:      lessonText.trim(),
-          difficulty_level: 'Standard',
-          is_published:     isPublished,
-          ...(fileUrl ? { file_url: fileUrl } : {}),
-        })
-        .select('id')
-        .single()
-      if (lessonError || !lesson) throw new Error('Failed to save lesson.')
-
-      const rows = questions.map((q: GeneratedQuestion) => ({
-        lesson_id:      lesson.id,
-        difficulty:     q.difficulty,
-        question_text:  q.question_text,
-        option_a:       q.option_a,
-        option_b:       q.option_b,
-        option_c:       q.option_c,
-        option_d:       q.option_d,
-        correct_answer: q.correct_answer,
-        hint:           q.hint,
-        is_approved:    false,
-      }))
-      const { error: qError } = await supabase.from('questions').insert(rows)
-      if (qError) throw new Error('Lesson saved but questions failed to save.')
-
-      router.push(`/teacher/questions?lesson_id=${lesson.id}`)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-      setStatus('idle')
+  async function handleCreate() {
+    if (!name.trim() || !section.trim()) { setFormError('Class name and section are required.'); return }
+    if (!teacherId) return
+    setSubmitting(true)
+    setFormError(null)
+    setSuccessMsg(null)
+    try {
+      const joinCode = generateJoinCode()
+      const { error: createError } = await createClass({
+        teacher_id: teacherId,
+        name:       name.trim(),
+        section:    section.trim(),
+        join_code:  joinCode,
+      })
+      if (createError) throw createError
+      setSuccessMsg(`Class "${name.trim()} — ${section.trim()}" created! Join code: ${joinCode}`)
+      setName('')
+      setSection('')
+      await fetchClasses(teacherId)
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to create class.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  const busy = status !== 'idle'
+  if (loading) return (
+    <AppLayout title="My Classes">
+      <style>{`@keyframes cl-spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={s.center}><div style={s.spinner} /><p style={s.muted}>Loading classes…</p></div>
+    </AppLayout>
+  )
+
+  if (error) return (
+    <AppLayout title="My Classes">
+      <div style={s.center}>
+        <div style={s.errorCard}><span style={{ fontSize: '2rem' }}>⚠️</span><p style={{ color: '#8b1a1a', fontWeight: 600, margin: 0 }}>{error}</p></div>
+      </div>
+    </AppLayout>
+  )
 
   return (
-    <AppLayout title="New Lesson">
+    <AppLayout title="My Classes">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
-        :root {
-          --green:       #1a7a40;
-          --green-dark:  #0d3d20;
-          --green-mid:   #1f6b38;
-          --green-light: #eaf6ef;
-          --gold:        #f0a500;
-          --gold-lt:     #ffd166;
-          --gold-bg:     #fffbf0;
-          --cream:       #fdfaf5;
-          --cream2:      #f5efe3;
-          --text:        #1a1f16;
-          --muted:       #6b7280;
-          --border:      rgba(26,122,64,0.13);
-        }
-        .nl-select:focus, .nl-input:focus, .nl-textarea:focus {
-          outline: none;
-          border-color: var(--green);
-          box-shadow: 0 0 0 3px rgba(26,122,64,0.1);
-        }
-        .nl-subject-btn:hover { filter: brightness(0.95); }
-        .nl-tab:hover { background: var(--cream2) !important; }
-        .nl-dropzone:hover { border-color: var(--green) !important; background: var(--green-light) !important; }
-        .nl-submit-btn:hover:not(:disabled) { background: var(--green-mid) !important; }
-        .nl-remove-btn:hover { background: #fde8e8 !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap');
+        @keyframes cl-spin  { to { transform: rotate(360deg); } }
+        @keyframes cl-fade  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes cl-slide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .cl-card { transition: box-shadow 0.18s, transform 0.18s; }
+        .cl-card:hover { box-shadow: 0 8px 28px rgba(13,61,32,0.11); transform: translateY(-2px); }
+        .cl-back:hover { background: #eaf6ef !important; }
+        .cl-primary:hover { background: #1a7a40 !important; }
+        .cl-small:hover { background: #e09b00 !important; }
+        .cl-input:focus { border-color: #1a7a40 !important; box-shadow: 0 0 0 3px rgba(26,122,64,0.12); outline: none; }
+        .cl-content { animation: cl-fade 0.25s ease both; }
+        .cl-success { animation: cl-slide 0.3s ease both; }
       `}</style>
 
       <div style={s.page}>
 
-        {/* Page header */}
-        <div style={s.pageHeader}>
-          <h1 style={s.pageTitle}>Create a new lesson</h1>
-          <p style={s.pageDesc}>
-            Fill in the details below. Gemini will generate 15 multiple-choice questions
-            (5 Basic · 5 Standard · 5 Advanced) for you to review before publishing.
-          </p>
-        </div>
-
-        {/* Card */}
-        <div style={s.card}>
-
-          {error && (
-            <div style={s.errorBox}>
-              <span style={s.errorIcon}>⚠</span>
-              {error}
-            </div>
-          )}
-
-          {/* Class */}
-          <div style={s.field}>
-            <label style={s.label}>Class</label>
-            {classes.length === 0 ? (
-              <div style={s.emptyNote}>
-                You have no classes yet. Create a class first before adding a lesson.
-              </div>
-            ) : (
-              <select
-                className="nl-select"
-                value={classId}
-                onChange={e => setClassId(e.target.value)}
-                style={s.select}
-                disabled={busy}
-              >
-                {classes.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} — {c.section}</option>
-                ))}
-              </select>
-            )}
+        {/* ── Header ── */}
+        <div style={s.topRow}>
+          <div>
+            <div style={s.breadcrumb}>Teacher · Classes</div>
+            <h1 style={s.heading}>My Classes</h1>
+            <p style={s.muted}>Create and manage your class sections</p>
           </div>
-
-          {/* Subject */}
-          <div style={s.field}>
-            <label style={s.label}>Subject</label>
-            <div style={s.subjectRow}>
-              {SUBJECTS.map(sub => {
-                const active = subject === sub
-                return (
-                  <button
-                    key={sub}
-                    className="nl-subject-btn"
-                    onClick={() => setSubject(sub)}
-                    disabled={busy}
-                    style={{
-                      ...s.subjectBtn,
-                      background:  active ? 'var(--green-dark)' : 'var(--cream2)',
-                      color:       active ? '#fff' : 'var(--muted)',
-                      border:      active ? '1.5px solid var(--green-dark)' : '1.5px solid var(--border)',
-                      fontWeight:  active ? 700 : 500,
-                    }}
-                  >
-                    <span style={{ fontSize: '1rem' }}>{SUBJECT_ICONS[sub]}</span>
-                    {sub}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={s.divider} />
-
-          {/* Lesson title */}
-          <div style={s.field}>
-            <label style={s.label}>Lesson title</label>
-            <input
-              className="nl-input"
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Introduction to Fractions"
-              style={s.input}
-              disabled={busy}
-            />
-          </div>
-
-          {/* Skill name */}
-          <div style={s.field}>
-            <label style={s.label}>
-              Skill name
-              <span style={s.labelHint}> — e.g. "Identifying the main idea"</span>
-            </label>
-            <input
-              className="nl-input"
-              type="text"
-              value={skillName}
-              onChange={e => setSkillName(e.target.value)}
-              placeholder="Enter the skill being assessed"
-              style={s.input}
-              disabled={busy}
-            />
-          </div>
-
-          {/* Divider */}
-          <div style={s.divider} />
-
-          {/* Lesson content */}
-          <div style={s.field}>
-            <label style={s.label}>Lesson content</label>
-
-            <div style={s.infoBox}>
-              <span style={s.infoIcon}>ℹ</span>
-              <span>
-                Type the lesson text <strong>or</strong> upload a file for students to download.
-                If you upload without text, Gemini will base questions on the skill name.
-                For best results, provide both.
-              </span>
-            </div>
-
-            {/* Tabs */}
-            <div style={s.tabRow}>
-              {(['text', 'file'] as const).map(tab => {
-                const active  = activeTab === tab
-                const checked = tab === 'text'
-                  ? lessonText.trim().length >= 80
-                  : !!file
-                return (
-                  <button
-                    key={tab}
-                    className="nl-tab"
-                    type="button"
-                    onClick={() => switchTab(tab)}
-                    disabled={busy}
-                    style={{
-                      ...s.tab,
-                      background:   active ? 'var(--green-dark)' : '#fff',
-                      color:        active ? 'var(--gold-lt)' : 'var(--muted)',
-                      borderColor:  active ? 'var(--green-dark)' : 'var(--border)',
-                      fontWeight:   active ? 700 : 500,
-                    }}
-                  >
-                    {tab === 'text' ? '✏️ Type lesson text' : '📎 Upload file'}
-                    {checked && (
-                      <span style={s.tabBadge}>✓</span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Text tab */}
-            {activeTab === 'text' && (
-              <>
-                <textarea
-                  className="nl-textarea"
-                  value={lessonText}
-                  onChange={e => setLessonText(e.target.value)}
-                  placeholder={
-                    'Paste or type the lesson content here.\n\n' +
-                    'The more detail you provide, the better the generated questions will be. ' +
-                    'Include definitions, examples, and explanations relevant to the skill.'
-                  }
-                  rows={12}
-                  style={s.textarea}
-                  disabled={busy}
-                />
-                <div style={s.charRow}>
-                  <span style={{ color: 'var(--muted)' }}>{lessonText.length} characters</span>
-                  {lessonText.length > 0 && lessonText.length < 80 && (
-                    <span style={{ color: '#8b1a1a', fontWeight: 600 }}>
-                      {80 - lessonText.length} more needed
-                    </span>
-                  )}
-                  {lessonText.length >= 80 && (
-                    <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ Good to go</span>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* File tab */}
-            {activeTab === 'file' && (
-              <>
-                {file ? (
-                  <div style={s.filePreview}>
-                    <div style={s.fileIconWrap}>📄</div>
-                    <div style={s.fileInfo}>
-                      <span style={s.fileName}>{file.name}</span>
-                      <span style={s.fileSize}>{(file.size / 1024).toFixed(1)} KB</span>
-                    </div>
-                    <button
-                      className="nl-remove-btn"
-                      style={s.removeBtn}
-                      onClick={removeFile}
-                      disabled={busy}
-                      type="button"
-                    >
-                      ✕ Remove
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    className="nl-dropzone"
-                    style={s.dropZone}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📁</span>
-                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--green-dark)', margin: '0 0 0.25rem' }}>
-                      Click to choose a file
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0 }}>
-                      PDF, Word, PowerPoint, Excel, images, or plain text
-                    </p>
-                  </div>
-                )}
-
-                {/* Optional text below file */}
-                <div style={{ marginTop: '1.25rem' }}>
-                  <label style={{ ...s.label, color: 'var(--muted)' }}>
-                    Lesson text
-                    <span style={s.labelHint}> — optional when a file is uploaded</span>
-                  </label>
-                  <textarea
-                    className="nl-textarea"
-                    value={lessonText}
-                    onChange={e => setLessonText(e.target.value)}
-                    placeholder="Optionally add text here to improve question quality…"
-                    rows={5}
-                    style={{ ...s.textarea, opacity: 0.85 }}
-                    disabled={busy}
-                  />
-                  {lessonText.length > 0 && (
-                    <div style={s.charRow}>
-                      <span style={{ color: 'var(--muted)' }}>{lessonText.length} characters</span>
-                      {lessonText.length >= 80 && (
-                        <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ Will be used for question generation</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED}
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-              disabled={busy}
-            />
-          </div>
-
-          {/* Divider */}
-          <div style={s.divider} />
-
-          {/* Publish toggle */}
-          <div style={s.publishRow}>
-            <div style={s.publishToggleWrap}>
-              <input
-                type="checkbox"
-                id="publish"
-                checked={isPublished}
-                onChange={e => setIsPublished(e.target.checked)}
-                disabled={busy}
-                style={s.checkbox}
-              />
-              <div
-                style={{
-                  ...s.toggleTrack,
-                  background: isPublished ? 'var(--green)' : 'rgba(26,122,64,0.15)',
-                }}
-                onClick={() => !busy && setIsPublished(v => !v)}
-              >
-                <div style={{
-                  ...s.toggleThumb,
-                  transform: isPublished ? 'translateX(18px)' : 'translateX(2px)',
-                }} />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="publish" style={s.publishLabel}>
-                Publish immediately
-              </label>
-              <p style={s.publishHint}>Students can see and take quizzes as soon as the lesson is saved.</p>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            className="nl-submit-btn"
-            onClick={handleSubmit}
-            disabled={busy || classes.length === 0}
-            style={{
-              ...s.submitBtn,
-              opacity: busy || classes.length === 0 ? 0.6 : 1,
-              cursor:  busy || classes.length === 0 ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {status === 'uploading'  && '⬆️  Uploading file…'}
-            {status === 'generating' && '⏳  Generating questions with Gemini…'}
-            {status === 'saving'     && '💾  Saving to database…'}
-            {status === 'idle'       && 'Generate questions & continue →'}
+          <button className="cl-back" style={s.btnOutline} onClick={() => router.push('/teacher')}>
+            ← Back to Dashboard
           </button>
-
-          {busy && (
-            <p style={s.statusHint}>
-              {status === 'uploading'
-                ? 'Uploading your file to storage…'
-                : status === 'generating'
-                ? "This usually takes 10–20 seconds. Please don't close the tab."
-                : 'Almost done — saving your lesson and questions…'}
-            </p>
-          )}
-
         </div>
+
+        {/* ── Create form ── */}
+        <div style={s.formCard}>
+          <h2 style={s.formTitle}>Create a New Class</h2>
+          <p style={{ ...s.muted, marginTop: '0.25rem' }}>A unique join code will be generated automatically for students to enrol.</p>
+
+          <div style={s.formRow}>
+            <div style={s.fieldGroup}>
+              <label style={s.label}>Class Name</label>
+              <input
+                className="cl-input"
+                style={s.input}
+                type="text"
+                placeholder="e.g. Grade 6"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                disabled={submitting}
+              />
+            </div>
+            <div style={s.fieldGroup}>
+              <label style={s.label}>Section</label>
+              <input
+                className="cl-input"
+                style={s.input}
+                type="text"
+                placeholder="e.g. Sampaguita"
+                value={section}
+                onChange={e => setSection(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                disabled={submitting}
+              />
+            </div>
+            <button
+              className="cl-primary"
+              style={{ ...s.btnPrimary, alignSelf: 'flex-end', opacity: submitting ? 0.7 : 1, transition: 'background 0.15s' }}
+              onClick={handleCreate}
+              disabled={submitting}
+            >
+              {submitting ? 'Creating…' : '✚ Create Class'}
+            </button>
+          </div>
+
+          {formError && <div style={s.errorMsg}>⚠️ {formError}</div>}
+          {successMsg && (
+            <div className="cl-success" style={s.successBox}>
+              <span style={s.successIcon}>✅</span>
+              <div>
+                <div style={{ fontWeight: 700, color: '#0d5c28', fontSize: '0.95rem' }}>Class created!</div>
+                <div style={{ fontSize: '0.88rem', color: '#1a7a40', marginTop: '0.15rem' }}>{successMsg}</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Class list ── */}
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <h2 style={s.sectionTitle}>Existing Classes</h2>
+            <span style={s.countBadge}>{classes.length}</span>
+          </div>
+
+          {classes.length === 0 ? (
+            <div style={s.empty}>
+              <span style={{ fontSize: '2.5rem' }}>🏫</span>
+              <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20' }}>No classes yet.</p>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>Create one above to get started.</p>
+            </div>
+          ) : (
+            <div className="cl-content" style={s.classGrid}>
+              {classes.map(cls => (
+                <div key={cls.id} className="cl-card" style={s.classCard}>
+                  <div style={s.classCardTop}>
+                    <div style={s.classIconWrap}>🏫</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={s.classCardName}>{cls.name} — {cls.section}</div>
+                      <div style={s.classCardSub}>
+                        Created {new Date(cls.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                    </div>
+                    <span style={s.studentBadge}>
+                      👤 {cls.studentCount} {cls.studentCount === 1 ? 'student' : 'students'}
+                    </span>
+                  </div>
+
+                  <div style={s.codeRow}>
+                    <span style={s.codeLabel}>Join Code</span>
+                    <span style={s.codeValue}>{cls.join_code}</span>
+                  </div>
+
+                  <button
+                    className="cl-small"
+                    style={s.btnSmall}
+                    onClick={() => router.push(`/teacher/lessons/new?class_id=${cls.id}`)}
+                  >
+                    ✚ New Lesson
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
       </div>
     </AppLayout>
   )
 }
 
 const s: Record<string, React.CSSProperties> = {
-  page:        { maxWidth: '680px', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-  pageHeader:  { marginBottom: '1.75rem' },
-  pageTitle:   { fontFamily: "'DM Serif Display', serif", fontSize: '1.65rem', fontWeight: 400, color: '#0d3d20', marginBottom: '0.4rem' },
-  pageDesc:    { fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.65 },
-
-  card:        { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.4rem' },
-
-  errorBox:    { display: 'flex', alignItems: 'flex-start', gap: '0.5rem', background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.83rem', color: '#8b1a1a', lineHeight: 1.5 },
-  errorIcon:   { flexShrink: 0, fontWeight: 700 },
-
-  field:       { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-  label:       { fontSize: '0.72rem', fontWeight: 700, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const },
-  labelHint:   { fontWeight: 400, color: '#6b7280', textTransform: 'none' as const, letterSpacing: 0 },
-
-  emptyNote:   { fontSize: '0.83rem', color: '#7a5500', background: '#fffbf0', border: '1.5px solid rgba(200,130,0,0.2)', borderRadius: '10px', padding: '0.7rem 1rem' },
-
-  select:      { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '10px', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
-
-  subjectRow:  { display: 'flex', gap: '0.6rem' },
-  subjectBtn:  { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', padding: '0.6rem 0.5rem', borderRadius: '10px', fontSize: '0.85rem', fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'all 0.15s' },
-
-  divider:     { borderTop: '1px solid rgba(26,122,64,0.1)', margin: '0.1rem 0' },
-
-  input:       { width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '10px', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
-
-  infoBox:     { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.15)', borderRadius: '10px', padding: '0.75rem 1rem', fontSize: '0.82rem', color: '#0d3d20', lineHeight: 1.6 },
-  infoIcon:    { flexShrink: 0, fontWeight: 700, fontSize: '0.9rem', marginTop: '1px' },
-
-  tabRow:      { display: 'flex', gap: '0.5rem' },
-  tab:         { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.55rem 0.75rem', border: '1.5px solid', borderRadius: '10px', fontSize: '0.83rem', fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer', transition: 'all 0.15s' },
-  tabBadge:    { background: '#1a7a40', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '8px' },
-
-  textarea:    { width: '100%', padding: '0.75rem 0.9rem', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '10px', fontSize: '0.875rem', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1a1f16', background: '#fdfaf5', resize: 'vertical' as const, lineHeight: 1.7, boxSizing: 'border-box' as const, transition: 'border-color 0.15s, box-shadow 0.15s' },
-  charRow:     { display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginTop: '0.3rem' },
-
-  dropZone:    { border: '2px dashed rgba(26,122,64,0.25)', borderRadius: '12px', padding: '2.5rem 1rem', textAlign: 'center' as const, cursor: 'pointer', background: '#fdfaf5', transition: 'all 0.15s' },
-
-  filePreview: { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '12px', padding: '0.9rem 1rem' },
-  fileIconWrap:{ fontSize: '1.5rem', flexShrink: 0 },
-  fileInfo:    { display: 'flex', flexDirection: 'column' as const, gap: '0.1rem', flex: 1, minWidth: 0 },
-  fileName:    { fontSize: '0.88rem', fontWeight: 700, color: '#0d3d20', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
-  fileSize:    { fontSize: '0.72rem', color: '#6b7280' },
-  removeBtn:   { flexShrink: 0, background: '#fff5f5', border: '1.5px solid rgba(139,26,26,0.18)', color: '#8b1a1a', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, padding: '0.3rem 0.65rem', borderRadius: '7px', fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'background 0.15s' },
-
-  publishRow:       { display: 'flex', alignItems: 'flex-start', gap: '0.9rem', background: '#fdfaf5', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '12px', padding: '1rem 1.1rem' },
-  publishToggleWrap:{ paddingTop: '2px', flexShrink: 0 },
-  checkbox:         { display: 'none' },
-  toggleTrack:      { width: '38px', height: '22px', borderRadius: '11px', cursor: 'pointer', position: 'relative' as const, transition: 'background 0.2s', flexShrink: 0 },
-  toggleThumb:      { position: 'absolute' as const, top: '3px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', transition: 'transform 0.2s' },
-  publishLabel:     { fontSize: '0.88rem', fontWeight: 700, color: '#1a1f16', cursor: 'pointer', display: 'block', marginBottom: '0.2rem' },
-  publishHint:      { fontSize: '0.78rem', color: '#6b7280', lineHeight: 1.5 },
-
-  submitBtn:   { width: '100%', padding: '0.85rem', background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.95rem', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'background 0.15s', letterSpacing: '0.01em' },
-  statusHint:  { textAlign: 'center' as const, fontSize: '0.78rem', color: '#6b7280', marginTop: '0.5rem' },
+  page:          { padding: '2.5rem', maxWidth: '960px', margin: '0 auto', fontFamily: "'Inter', sans-serif" },
+  topRow:        { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' },
+  breadcrumb:    { fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
+  heading:       { fontFamily: "'DM Serif Display', serif", fontSize: '2.1rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  muted:         { color: '#6b7280', fontSize: '0.95rem', margin: 0 },
+  btnOutline:    { background: '#fff', color: '#0d3d20', border: '1.5px solid rgba(26,122,64,0.35)', borderRadius: '9px', padding: '0.7rem 1.4rem', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' },
+  formCard:      { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '20px', padding: '2rem', marginBottom: '2.5rem', boxShadow: '0 2px 12px rgba(13,61,32,0.05)' },
+  formTitle:     { fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0d3d20', margin: '0 0 0.25rem' },
+  formRow:       { display: 'flex', gap: '1rem', alignItems: 'flex-start', marginTop: '1.25rem', flexWrap: 'wrap' as const },
+  fieldGroup:    { display: 'flex', flexDirection: 'column' as const, gap: '0.45rem', flex: 1, minWidth: '200px' },
+  label:         { fontSize: '0.73rem', fontWeight: 700, color: '#0d3d20', letterSpacing: '0.07em', textTransform: 'uppercase' as const },
+  input:         { border: '1.5px solid rgba(26,122,64,0.2)', borderRadius: '10px', padding: '0.8rem 1.1rem', fontSize: '0.97rem', fontFamily: 'inherit', color: '#1a1f16', background: '#fdfaf5', transition: 'border-color 0.15s, box-shadow 0.15s' },
+  btnPrimary:    { background: '#0d3d20', color: '#fff', border: 'none', borderRadius: '10px', padding: '0.8rem 1.6rem', fontWeight: 700, fontSize: '0.97rem', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' as const },
+  errorMsg:      { color: '#8b1a1a', fontSize: '0.9rem', marginTop: '0.75rem', background: '#fff0f0', border: '1px solid rgba(155,28,28,0.18)', borderRadius: '8px', padding: '0.7rem 1.1rem' },
+  successBox:    { display: 'flex', alignItems: 'flex-start', gap: '0.75rem', background: '#eaf6ef', border: '1.5px solid rgba(26,122,64,0.25)', borderRadius: '12px', padding: '1.1rem 1.35rem', marginTop: '1rem' },
+  successIcon:   { fontSize: '1.3rem', flexShrink: 0 },
+  section:       { marginBottom: '2rem' },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' },
+  sectionTitle:  { fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0d3d20', margin: 0 },
+  countBadge:    { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.75rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px' },
+  classGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' },
+  classCard:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '1.35rem', display: 'flex', flexDirection: 'column' as const, gap: '0.9rem', cursor: 'default' },
+  classCardTop:  { display: 'flex', alignItems: 'flex-start', gap: '0.75rem' },
+  classIconWrap: { fontSize: '1.5rem', flexShrink: 0 },
+  classCardName: { fontWeight: 700, fontSize: '0.97rem', color: '#0d3d20', lineHeight: 1.3 },
+  classCardSub:  { fontSize: '0.82rem', color: '#6b7280', marginTop: '0.2rem' },
+  studentBadge:  { background: '#eaf6ef', color: '#0d5c28', fontSize: '0.75rem', fontWeight: 700, padding: '5px 11px', borderRadius: '20px', whiteSpace: 'nowrap' as const, flexShrink: 0 },
+  codeRow:       { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#fdfaf5', borderRadius: '10px', padding: '0.75rem 1rem', border: '1px solid rgba(26,122,64,0.10)' },
+  codeLabel:     { fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#6b7280' },
+  codeValue:     { background: '#0d3d20', color: '#ffd166', fontFamily: 'monospace', fontSize: '0.97rem', fontWeight: 700, padding: '0.25rem 0.9rem', borderRadius: '6px', letterSpacing: '0.14em', marginLeft: 'auto' },
+  btnSmall:      { background: '#f0a500', color: '#0d3d20', border: 'none', borderRadius: '9px', padding: '0.55rem 1.1rem', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', alignSelf: 'flex-start' as const },
+  empty:         { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '3rem 2rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.75rem', textAlign: 'center' as const },
+  center:        { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
+  errorCard:     { background: '#fff0f0', border: '1.5px solid rgba(155,28,28,0.18)', borderRadius: '18px', padding: '2.5rem 3rem', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.75rem' },
+  spinner:       { width: '42px', height: '42px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'cl-spin 0.8s linear infinite' },
 }
