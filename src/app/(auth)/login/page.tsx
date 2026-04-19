@@ -1,3 +1,4 @@
+// src/app/(auth)/login/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -7,24 +8,67 @@ import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [credential, setCredential] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
-    setError('')
-    setLoading(true)
+  setError('')
+  setLoading(true)
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+  const isLRN = /^\d{12}$/.test(credential.trim())
+  let authError: { message: string } | null = null
+  let userId: string | undefined
 
-    if (authError) {
-      setError(authError.message)
+  if (isLRN) {
+      const { data: student, error: lookupError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('lrn', credential.trim())
+        .eq('role', 'student')
+        .single()
+
+      if (lookupError || !student) {
+        setError('Invalid LRN or password.')
+        setLoading(false)
+        return
+      }
+
+      const { error: signInError, data } = await supabase.auth.signInWithPassword({
+        email: student.email,
+        password,
+      })
+      authError = signInError
+      userId = data?.user?.id
+    } else {
+      const { error: signInError, data } = await supabase.auth.signInWithPassword({
+        email: credential.trim(),
+        password,
+      })
+      authError = signInError
+      userId = data?.user?.id
+    }
+
+    if (authError || !userId) {
+      setError('Invalid credentials. Please try again.')
       setLoading(false)
       return
     }
 
-    router.replace('/dashboard')
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (user?.role === 'admin') router.replace('/admin')
+    else if (user?.role === 'teacher') router.replace('/teacher')
+    else if (user?.role === 'student') router.replace('/student')
+    else {
+      setError('Invalid account type.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -325,13 +369,14 @@ export default function LoginPage() {
 
           {/* Email */}
           <div className="login-field">
-            <label className="login-label">Email address</label>
+            <label className="login-label">Email or LRN</label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@school.edu"
+              type="text"
+              value={credential}
+              onChange={e => setCredential(e.target.value)}
+              placeholder="Email address or 12-digit LRN"
               className="login-input"
+              autoComplete="username"
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
             />
           </div>
@@ -361,19 +406,6 @@ export default function LoginPage() {
               <>Sign in →</>
             )}
           </button>
-
-          {/* Divider */}
-          <div className="login-divider">
-            <div className="login-divider-line" />
-            <span className="login-divider-text">New to LINURI?</span>
-            <div className="login-divider-line" />
-          </div>
-
-          {/* Register link */}
-          <p className="login-footer">
-            No account yet?{' '}
-            <Link href="/register" className="login-link">Create one free</Link>
-          </p>
 
           {/* School tag */}
           <div className="login-school">

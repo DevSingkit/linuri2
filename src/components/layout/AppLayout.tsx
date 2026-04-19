@@ -34,6 +34,7 @@ const NAV: Record<Role, { label: string; href: string; icon: string }[]> = {
   ],
   admin: [
     { label: 'Dashboard',  href: '/admin',             icon: '▦'  },
+    { label: 'Add Teacher',href: '/admin/teacher/new',  icon: '➕' },
     { label: 'Users',      href: '/admin/users',       icon: '👥' },
     { label: 'Classes',    href: '/admin/classes',     icon: '🏫' },
     { label: 'Reports',    href: '/admin/reports',     icon: '📊' },
@@ -347,8 +348,7 @@ export default function AppLayout({ title, children }: Props) {
 
           <nav className="ly-sb-nav">
             {links.map(({ label, href, icon }) => {
-              const roots = ['/admin', '/teacher', '/student']
-              const active = pathname === href || (!roots.includes(href) && pathname.startsWith(href + '/'))
+              const active = pathname === href || (href !== '/admin' && href !== '/teacher' && href !== '/student' && pathname.startsWith(href + '/'))
               return (
                 <Link key={href} href={href} className={`ly-sb-link${active ? ' active' : ''}`}>
                   <span className="ly-sb-icon">{icon}</span>{label}

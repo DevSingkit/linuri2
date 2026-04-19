@@ -724,13 +724,11 @@ export default function LandingPage() {
         {/* ── NAV ── */}
         <nav className="lp-nav">
           <div className="lp-nav-brand">
-            <div className="lp-nav-mark">L</div>
-            <span className="lp-nav-name">LINURI</span>
-            <span className="lp-nav-chip">Grade 6</span>
+            <div className="lp-nav-mark">U</div>
+            <span className="lp-nav-name">UMCLS</span>
           </div>
           <div className="lp-nav-actions">
             <button className="btn-ghost" onClick={() => router.push('/login')}>Log in</button>
-            <button className="btn-solid" onClick={() => router.push('/register')}>Get Started →</button>
           </div>
         </nav>
 
@@ -750,11 +748,8 @@ export default function LandingPage() {
               LINURI tracks students' activity in subjects — then adapts the difficulty so that the teacher can have a better understanding of each student's progress.
             </p>
             <div className="lp-hero-btns">
-              <button className="btn-hero-prim" onClick={() => router.push('/register')}>
-                ✦ Start Learning Free
-              </button>
-              <button className="btn-hero-sec" onClick={() => router.push('/login')}>
-                I already have an account
+              <button className="btn-hero-prim" onClick={() => router.push('/login')}>
+                ✦ Get Started
               </button>
             </div>
             <div className="lp-hero-badges">
@@ -773,7 +768,6 @@ export default function LandingPage() {
           <div className="lp-subj lp-subj-en">English</div>
           <div className="lp-subj lp-subj-ma">Mathematics</div>
           <div className="lp-subj lp-subj-sc">Science</div>
-          <div className="lp-subj lp-subj-ma">Aralin Panlipunan</div>
           <div className="lp-subj lp-subj-en">Others</div>
         </div>
 
@@ -848,11 +842,11 @@ export default function LandingPage() {
           <div className="lp-roles">
             {[
               {
-                av: 'av-s', icon: '👦', role: 'Student', sub: 'Self-register',
+                av: 'av-s', icon: '👦', role: 'Student', sub: 'join via class link',
                 items: ['Take adaptive quizzes in Any Subject', 'Get AI-powered hints for some help without giving out the answer', 'Track personal mastery progress over time', 'Enrol in class with a join code'],
               },
               {
-                av: 'av-t', icon: '👩‍🏫', role: 'Teacher', sub: 'Self-register',
+                av: 'av-t', icon: '👩‍🏫', role: 'Teacher', sub: 'Created by admin',
                 items: ['Create class sections with join codes', 'Generate lessons and questions via Gemini AI', 'Review and approve questions before publishing', 'Monitor class mastery and flagged students'],
               },
               {
@@ -910,10 +904,7 @@ export default function LandingPage() {
           </p>
           <div className="lp-cta-btns">
             <button className="btn-hero-prim" onClick={() => router.push('/register')}>
-              ✦ Create an Account
-            </button>
-            <button className="btn-hero-sec" onClick={() => router.push('/login')}>
-              Log in
+              ✦ Log in
             </button>
           </div>
         </div>

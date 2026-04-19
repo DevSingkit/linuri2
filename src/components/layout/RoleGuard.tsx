@@ -1,4 +1,3 @@
-// src/components/layout/RoleGuard.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -14,14 +13,13 @@ interface Props {
 
 export default function RoleGuard({ allow, children }: Props) {
   const router = useRouter()
-  const [checking, setChecking] = useState(true)
+  const [ok, setOk] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.replace('/login')
-        return
-      }
+    async function check() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/login'); return }
+
       const { data } = await supabase
         .from('users')
         .select('role')
@@ -32,26 +30,36 @@ export default function RoleGuard({ allow, children }: Props) {
         router.replace('/unauthorized')
         return
       }
-      setChecking(false)
-    })
+      setOk(true)
+    }
+    check()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (checking) {
-    return (
+  if (!ok) return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#fdfaf5',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      color: '#6b7280',
+      fontSize: '0.9rem',
+      gap: '0.75rem',
+      flexDirection: 'column',
+    }}>
       <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#faf6ee',
-        fontFamily: 'sans-serif',
-        color: '#6b6b6b',
-        fontSize: '0.9rem'
-      }}>
-        Checking access…
-      </div>
-    )
-  }
+        width: '32px', height: '32px',
+        border: '3px solid #eaf6ef',
+        borderTop: '3px solid #1a7a40',
+        borderRadius: '50%',
+        animation: 'rg-spin 0.8s linear infinite',
+      }} />
+      <style>{`@keyframes rg-spin { to { transform: rotate(360deg); } }`}</style>
+      Checking access…
+    </div>
+  )
 
   return <>{children}</>
 }

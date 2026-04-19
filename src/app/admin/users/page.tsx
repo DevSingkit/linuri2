@@ -12,6 +12,7 @@ interface UserRow {
   email: string
   role: 'admin' | 'teacher' | 'student'
   created_at: string
+  lrn: string | null
 }
 
 type RoleFilter = 'All' | 'admin' | 'teacher' | 'student'
@@ -272,9 +273,18 @@ export default function AdminUsersPage() {
               <h1 style={s.heading}>All Users</h1>
               <p style={s.muted}>Manage everyone registered in the system</p>
             </div>
-            <button className="au-print-btn" onClick={() => window.print()}>
-              <span>🖨️</span> Print List
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                className="au-print-btn"
+                style={{ background: '#1a7a40' }}
+                onClick={() => router.push('/admin/teacher/new')}
+              >
+                <span>➕</span> Add Teacher
+              </button>
+              <button className="au-print-btn" onClick={() => window.print()}>
+                <span>🖨️</span> Print List
+              </button>
+            </div>
           </div>
 
           {/* ── Stat cards ── */}
