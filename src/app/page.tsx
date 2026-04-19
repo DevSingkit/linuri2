@@ -739,7 +739,7 @@ export default function LandingPage() {
           <div style={{ position: 'relative' }}>
             <div className="lp-eyebrow">
               <span className="lp-pulse" />
-              AI-Integrated Adaptive Learning System
+              United Methodist Cooperative Learning System
             </div>
             <h1>
               Every student learns at their <em>own pace.</em>

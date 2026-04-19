@@ -9,7 +9,8 @@ import type { MasteryRecord } from '@/types/linuri'
 
 interface EnrolledClass {
   class_id: string
-  classes: { name: string; section: string; join_code: string } | null
+  classes: { name: string; section: string; } | null
+  userData?: { name: string } | null
 }
 
 interface LessonRow {
@@ -46,6 +47,7 @@ export default function StudentDashboardPage() {
   const [mastery, setMastery] = useState<MasteryRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
+
 
   useEffect(() => {
     async function load() {
@@ -481,7 +483,7 @@ export default function StudentDashboardPage() {
                 {classes.map((c, i) => (
                   <div key={i} className="sd-class-card">
                     <span className="sd-class-name">{c.classes?.name ?? '—'} · {c.classes?.section ?? ''}</span>
-                    <span className="sd-class-code">Code: {c.classes?.join_code ?? '—'}</span>
+                    <span className="sd-class-code">Teacher: {c.userData?.name ?? '—'}</span>
                   </div>
                 ))}
               </div>
