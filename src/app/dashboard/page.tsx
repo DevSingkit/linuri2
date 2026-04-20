@@ -1,56 +1,61 @@
-// src/app/dashboard/page.tsx
-'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardGate() {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     async function redirect() {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
         if (sessionError || !session) {
-          await supabase.auth.signOut()
-          router.replace('/login')
-          return
+          await supabase.auth.signOut();
+          router.replace("/login");
+          return;
         }
 
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
         if (userError || !user) {
-          await supabase.auth.signOut()
-          router.replace('/login')
-          return
+          await supabase.auth.signOut();
+          router.replace("/login");
+          return;
         }
 
         const { data } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single()
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single();
 
         if (!data) {
-          router.replace('/login')
-          return
+          router.replace("/login");
+          return;
         }
 
         const dest: Record<string, string> = {
-          teacher: '/teacher',
-          student: '/student',
-          admin:   '/admin',
-        }
-        router.replace(dest[data.role] ?? '/login')
+          teacher: "/teacher",
+          student: "/student",
+          admin: "/admin",
+        };
+        router.replace(dest[data.role] ?? "/login");
       } catch {
-        await supabase.auth.signOut()
-        router.replace('/login')
+        await supabase.auth.signOut();
+        router.replace("/login");
       }
     }
 
-    redirect()
-  }, [router])
+    redirect();
+  }, [router]);
 
   return (
     <>
@@ -198,15 +203,48 @@ export default function DashboardGate() {
           <div className="linuri-gate-logo">
             <div className="linuri-gate-logo-mark">
               {/* Book + spark icon */}
-              <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="5" width="14" height="18" rx="2.5" fill="#ffd166" opacity="0.25"/>
-                <rect x="6" y="5" width="14" height="18" rx="2.5" fill="none" stroke="#ffd166" strokeWidth="1.6"/>
-                <path d="M9 10h8M9 13.5h6" stroke="#ffd166" strokeWidth="1.5" strokeLinecap="round"/>
-                <circle cx="21" cy="8" r="2.5" fill="#f0a500"/>
-                <path d="M21 5.5V4M21 12V10.5M23.5 8H25M17 8H18.5M23.27 5.73l1.06-1.06M18.67 10.33l-1.06 1.06M23.27 10.33l1.06 1.06M18.67 5.73l-1.06-1.06" stroke="#ffd166" strokeWidth="1.2" strokeLinecap="round"/>
+              <svg
+                viewBox="0 0 28 28"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="4"
+                  y="5"
+                  width="14"
+                  height="18"
+                  rx="2.5"
+                  fill="#ffd166"
+                  opacity="0.25"
+                />
+                <rect
+                  x="6"
+                  y="5"
+                  width="14"
+                  height="18"
+                  rx="2.5"
+                  fill="none"
+                  stroke="#ffd166"
+                  strokeWidth="1.6"
+                />
+                <path
+                  d="M9 10h8M9 13.5h6"
+                  stroke="#ffd166"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <circle cx="21" cy="8" r="2.5" fill="#f0a500" />
+                <path
+                  d="M21 5.5V4M21 12V10.5M23.5 8H25M17 8H18.5M23.27 5.73l1.06-1.06M18.67 10.33l-1.06 1.06M23.27 10.33l1.06 1.06M18.67 5.73l-1.06-1.06"
+                  stroke="#ffd166"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
-            <div className="linuri-gate-wordmark">LIN<span>URI</span></div>
+            <div className="linuri-gate-wordmark">
+              LIN<span>URI</span>
+            </div>
           </div>
 
           <div className="linuri-gate-spinner-wrap">
@@ -218,5 +256,5 @@ export default function DashboardGate() {
         </div>
       </div>
     </>
-  )
+  );
 }

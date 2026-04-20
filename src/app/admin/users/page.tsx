@@ -1,114 +1,163 @@
-// src/app/admin/users/page.tsx
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppLayout } from "@/components/layout";
+import { supabase } from "@/lib/supabase";
 
 interface UserRow {
-  id: string
-  name: string
-  email: string
-  role: 'admin' | 'teacher' | 'student'
-  created_at: string
-  lrn: string | null
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "teacher" | "student";
+  created_at: string;
+  lrn: string | null;
 }
 
-type RoleFilter = 'All' | 'admin' | 'teacher' | 'student'
+type RoleFilter = "All" | "admin" | "teacher" | "student";
 
-const ROLE_META: Record<string, { bg: string; color: string; border: string; icon: string; label: string }> = {
-  admin:   { bg: '#fff0f0', color: '#8b1a1a', border: 'rgba(155,28,28,0.18)',  icon: '🛡️', label: 'Admin'   },
-  teacher: { bg: '#fffbf0', color: '#7a5500', border: 'rgba(200,130,0,0.18)', icon: '👩‍🏫', label: 'Teacher' },
-  student: { bg: '#eaf6ef', color: '#0d5c28', border: 'rgba(26,122,64,0.18)', icon: '🎒', label: 'Student' },
-}
+const ROLE_META: Record<
+  string,
+  { bg: string; color: string; border: string; icon: string; label: string }
+> = {
+  admin: {
+    bg: "#fff0f0",
+    color: "#8b1a1a",
+    border: "rgba(155,28,28,0.18)",
+    icon: "🛡️",
+    label: "Admin",
+  },
+  teacher: {
+    bg: "#fffbf0",
+    color: "#7a5500",
+    border: "rgba(200,130,0,0.18)",
+    icon: "👩‍🏫",
+    label: "Teacher",
+  },
+  student: {
+    bg: "#eaf6ef",
+    color: "#0d5c28",
+    border: "rgba(26,122,64,0.18)",
+    icon: "🎒",
+    label: "Student",
+  },
+};
 
 export default function AdminUsersPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [users, setUsers]           = useState<UserRow[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState<string | null>(null)
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>('All')
-  const [search, setSearch]         = useState('')
-  const [sortBy, setSortBy]         = useState<'name' | 'role' | 'created_at'>('created_at')
-  const [sortAsc, setSortAsc]       = useState(false)
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "role" | "created_at">(
+    "created_at",
+  );
+  const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-        if (authError || !user) { router.replace('/login'); return }
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.replace("/login");
+          return;
+        }
 
         const { data, error: fetchError } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false })
-        if (fetchError) throw fetchError
-        setUsers((data as UserRow[]) ?? [])
+          .from("users")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (fetchError) throw fetchError;
+        setUsers((data as UserRow[]) ?? []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load users.')
+        setError(err instanceof Error ? err.message : "Failed to load users.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    load()
-  }, [router])
+    load();
+  }, [router]);
 
   const handleSort = (col: typeof sortBy) => {
-    if (sortBy === col) setSortAsc(a => !a)
-    else { setSortBy(col); setSortAsc(true) }
-  }
+    if (sortBy === col) setSortAsc((a) => !a);
+    else {
+      setSortBy(col);
+      setSortAsc(true);
+    }
+  };
 
   const filtered = users
-    .filter(u => {
-      const matchRole   = roleFilter === 'All' || u.role === roleFilter
-      const matchSearch = search === '' ||
+    .filter((u) => {
+      const matchRole = roleFilter === "All" || u.role === roleFilter;
+      const matchSearch =
+        search === "" ||
         u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
-      return matchRole && matchSearch
+        u.email.toLowerCase().includes(search.toLowerCase());
+      return matchRole && matchSearch;
     })
     .sort((a, b) => {
-      let cmp = 0
-      if (sortBy === 'name')       cmp = a.name.localeCompare(b.name)
-      else if (sortBy === 'role')  cmp = a.role.localeCompare(b.role)
-      else                         cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      return sortAsc ? cmp : -cmp
-    })
+      let cmp = 0;
+      if (sortBy === "name") cmp = a.name.localeCompare(b.name);
+      else if (sortBy === "role") cmp = a.role.localeCompare(b.role);
+      else
+        cmp =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortAsc ? cmp : -cmp;
+    });
 
-  const admins   = users.filter(u => u.role === 'admin').length
-  const teachers = users.filter(u => u.role === 'teacher').length
-  const students = users.filter(u => u.role === 'student').length
+  const admins = users.filter((u) => u.role === "admin").length;
+  const teachers = users.filter((u) => u.role === "teacher").length;
+  const students = users.filter((u) => u.role === "student").length;
 
   const SortIcon = ({ col }: { col: typeof sortBy }) => (
-    <span style={{ marginLeft: '4px', opacity: sortBy === col ? 1 : 0.35, fontSize: '0.7rem' }}>
-      {sortBy === col ? (sortAsc ? '▲' : '▼') : '⇅'}
+    <span
+      style={{
+        marginLeft: "4px",
+        opacity: sortBy === col ? 1 : 0.35,
+        fontSize: "0.7rem",
+      }}
+    >
+      {sortBy === col ? (sortAsc ? "▲" : "▼") : "⇅"}
     </span>
-  )
+  );
 
   const getInitials = (name: string) =>
-    name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
-  if (loading) return (
-    <AppLayout title="Users">
-      <style>{`@keyframes au-spin { to { transform: rotate(360deg); } }`}</style>
-      <div style={s.center}>
-        <div style={s.spinner} />
-        <p style={s.muted}>Loading users…</p>
-      </div>
-    </AppLayout>
-  )
-
-  if (error) return (
-    <AppLayout title="Users">
-      <div style={s.center}>
-        <div style={s.errorCard}>
-          <span style={{ fontSize: '2rem' }}>⚠️</span>
-          <p style={{ color: '#8b1a1a', fontWeight: 600, margin: 0 }}>{error}</p>
+  if (loading)
+    return (
+      <AppLayout title="Users">
+        <style>{`@keyframes au-spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={s.center}>
+          <div style={s.spinner} />
+          <p style={s.muted}>Loading users…</p>
         </div>
-      </div>
-    </AppLayout>
-  )
+      </AppLayout>
+    );
+
+  if (error)
+    return (
+      <AppLayout title="Users">
+        <div style={s.center}>
+          <div style={s.errorCard}>
+            <span style={{ fontSize: "2rem" }}>⚠️</span>
+            <p style={{ color: "#8b1a1a", fontWeight: 600, margin: 0 }}>
+              {error}
+            </p>
+          </div>
+        </div>
+      </AppLayout>
+    );
 
   return (
     <>
@@ -265,7 +314,6 @@ export default function AdminUsersPage() {
 
       <AppLayout title="Users">
         <div className="au-page">
-
           {/* ── Header ── */}
           <div style={s.topRow}>
             <div>
@@ -273,11 +321,18 @@ export default function AdminUsersPage() {
               <h1 style={s.heading}>All Users</h1>
               <p style={s.muted}>Manage everyone registered in the system</p>
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
               <button
                 className="au-print-btn"
-                style={{ background: '#1a7a40' }}
-                onClick={() => router.push('/admin/teacher/new')}
+                style={{ background: "#1a7a40" }}
+                onClick={() => router.push("/admin/teacher/new")}
               >
                 <span>➕</span> Add Teacher
               </button>
@@ -290,15 +345,47 @@ export default function AdminUsersPage() {
           {/* ── Stat cards ── */}
           <div style={s.statGrid}>
             {[
-              { label: 'Total Users',  value: users.length, icon: '👥', bg: '#eaf6ef', color: '#0d3d20', border: 'rgba(26,122,64,0.18)' },
-              { label: 'Admins',       value: admins,       icon: '🛡️', bg: '#fff0f0', color: '#8b1a1a', border: 'rgba(155,28,28,0.18)' },
-              { label: 'Teachers',     value: teachers,     icon: '👩‍🏫', bg: '#fffbf0', color: '#7a5500', border: 'rgba(200,130,0,0.18)' },
-              { label: 'Students',     value: students,     icon: '🎒', bg: '#eaf6ef', color: '#0d5c28', border: 'rgba(26,122,64,0.22)' },
-            ].map(c => (
+              {
+                label: "Total Users",
+                value: users.length,
+                icon: "👥",
+                bg: "#eaf6ef",
+                color: "#0d3d20",
+                border: "rgba(26,122,64,0.18)",
+              },
+              {
+                label: "Admins",
+                value: admins,
+                icon: "🛡️",
+                bg: "#fff0f0",
+                color: "#8b1a1a",
+                border: "rgba(155,28,28,0.18)",
+              },
+              {
+                label: "Teachers",
+                value: teachers,
+                icon: "👩‍🏫",
+                bg: "#fffbf0",
+                color: "#7a5500",
+                border: "rgba(200,130,0,0.18)",
+              },
+              {
+                label: "Students",
+                value: students,
+                icon: "🎒",
+                bg: "#eaf6ef",
+                color: "#0d5c28",
+                border: "rgba(26,122,64,0.22)",
+              },
+            ].map((c) => (
               <div
                 key={c.label}
                 className="au-stat"
-                style={{ ...s.statCard, background: c.bg, border: `1.5px solid ${c.border}` }}
+                style={{
+                  ...s.statCard,
+                  background: c.bg,
+                  border: `1.5px solid ${c.border}`,
+                }}
               >
                 <span style={s.statIcon}>{c.icon}</span>
                 <span style={{ ...s.statNum, color: c.color }}>{c.value}</span>
@@ -317,34 +404,51 @@ export default function AdminUsersPage() {
                 type="text"
                 placeholder="Search by name or email…"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
             {/* Role pills */}
             <div style={s.pillRow}>
-              {(['All', 'admin', 'teacher', 'student'] as RoleFilter[]).map(r => (
-                <button
-                  key={r}
-                  className={`au-pill-btn${roleFilter === r ? ' au-pill-active' : ''}`}
-                  onClick={() => setRoleFilter(r)}
-                >
-                  {r === 'All' ? 'All Roles' : ROLE_META[r].label}
-                </button>
-              ))}
+              {(["All", "admin", "teacher", "student"] as RoleFilter[]).map(
+                (r) => (
+                  <button
+                    key={r}
+                    className={`au-pill-btn${roleFilter === r ? " au-pill-active" : ""}`}
+                    onClick={() => setRoleFilter(r)}
+                  >
+                    {r === "All" ? "All Roles" : ROLE_META[r].label}
+                  </button>
+                ),
+              )}
             </div>
           </div>
 
-          <p style={{ ...s.muted, marginBottom: '0.85rem', fontSize: '0.88rem' }}>
-            Showing <strong style={{ color: '#0d3d20' }}>{filtered.length}</strong> of {users.length} user{users.length !== 1 ? 's' : ''}
+          <p
+            style={{ ...s.muted, marginBottom: "0.85rem", fontSize: "0.88rem" }}
+          >
+            Showing{" "}
+            <strong style={{ color: "#0d3d20" }}>{filtered.length}</strong> of{" "}
+            {users.length} user{users.length !== 1 ? "s" : ""}
           </p>
 
           {/* ── Empty state ── */}
           {filtered.length === 0 ? (
             <div style={s.empty}>
-              <span style={{ fontSize: '2.5rem' }}>👤</span>
-              <p style={{ margin: 0, fontWeight: 600, color: '#0d3d20', fontSize: '1rem' }}>No users found</p>
-              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.88rem' }}>Try adjusting your search or filter.</p>
+              <span style={{ fontSize: "2.5rem" }}>👤</span>
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight: 600,
+                  color: "#0d3d20",
+                  fontSize: "1rem",
+                }}
+              >
+                No users found
+              </p>
+              <p style={{ margin: 0, color: "#6b7280", fontSize: "0.88rem" }}>
+                Try adjusting your search or filter.
+              </p>
             </div>
           ) : (
             <>
@@ -354,18 +458,27 @@ export default function AdminUsersPage() {
                   <thead>
                     <tr>
                       <th style={s.th}>
-                        <button className="au-sort-btn" onClick={() => handleSort('name')}>
+                        <button
+                          className="au-sort-btn"
+                          onClick={() => handleSort("name")}
+                        >
                           Name <SortIcon col="name" />
                         </button>
                       </th>
                       <th style={s.th}>Email</th>
                       <th style={s.th}>
-                        <button className="au-sort-btn" onClick={() => handleSort('role')}>
+                        <button
+                          className="au-sort-btn"
+                          onClick={() => handleSort("role")}
+                        >
                           Role <SortIcon col="role" />
                         </button>
                       </th>
                       <th style={s.th}>
-                        <button className="au-sort-btn" onClick={() => handleSort('created_at')}>
+                        <button
+                          className="au-sort-btn"
+                          onClick={() => handleSort("created_at")}
+                        >
                           Date Joined <SortIcon col="created_at" />
                         </button>
                       </th>
@@ -373,38 +486,67 @@ export default function AdminUsersPage() {
                   </thead>
                   <tbody>
                     {filtered.map((u, i) => {
-                      const rm = ROLE_META[u.role]
+                      const rm = ROLE_META[u.role];
                       return (
-                        <tr key={u.id} className="au-tr" style={i % 2 === 0 ? s.trEven : s.trOdd}>
+                        <tr
+                          key={u.id}
+                          className="au-tr"
+                          style={i % 2 === 0 ? s.trEven : s.trOdd}
+                        >
                           <td style={{ ...s.td, fontWeight: 600 }}>
                             <div style={s.avatarRow}>
-                              <div style={{
-                                ...s.avatar,
-                                background: rm.bg,
-                                color: rm.color,
-                                border: `1.5px solid ${rm.border}`,
-                              }}>
+                              <div
+                                style={{
+                                  ...s.avatar,
+                                  background: rm.bg,
+                                  color: rm.color,
+                                  border: `1.5px solid ${rm.border}`,
+                                }}
+                              >
                                 {getInitials(u.name)}
                               </div>
                               <span>{u.name}</span>
                             </div>
                           </td>
-                          <td style={{ ...s.td, color: '#6b7280', fontSize: '0.875rem' }}>{u.email}</td>
+                          <td
+                            style={{
+                              ...s.td,
+                              color: "#6b7280",
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            {u.email}
+                          </td>
                           <td style={s.td}>
-                            <span style={{
-                              ...s.rolePill,
-                              background: rm.bg,
-                              color: rm.color,
-                              border: `1px solid ${rm.border}`,
-                            }}>
+                            <span
+                              style={{
+                                ...s.rolePill,
+                                background: rm.bg,
+                                color: rm.color,
+                                border: `1px solid ${rm.border}`,
+                              }}
+                            >
                               {rm.icon} {rm.label}
                             </span>
                           </td>
-                          <td style={{ ...s.td, color: '#6b7280', fontSize: '0.875rem' }}>
-                            {new Date(u.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          <td
+                            style={{
+                              ...s.td,
+                              color: "#6b7280",
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            {new Date(u.created_at).toLocaleDateString(
+                              "en-PH",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )}
                           </td>
                         </tr>
-                      )
+                      );
                     })}
                   </tbody>
                 </table>
@@ -412,20 +554,23 @@ export default function AdminUsersPage() {
 
               {/* ── Mobile cards ── */}
               <div className="au-cards">
-                {filtered.map(u => {
-                  const rm = ROLE_META[u.role]
+                {filtered.map((u) => {
+                  const rm = ROLE_META[u.role];
                   return (
                     <div key={u.id} className="au-user-card">
                       <div className="au-user-card-top">
-                        <div style={{
-                          ...s.avatar,
-                          width: '44px', height: '44px',
-                          fontSize: '1rem',
-                          background: rm.bg,
-                          color: rm.color,
-                          border: `1.5px solid ${rm.border}`,
-                          flexShrink: 0,
-                        }}>
+                        <div
+                          style={{
+                            ...s.avatar,
+                            width: "44px",
+                            height: "44px",
+                            fontSize: "1rem",
+                            background: rm.bg,
+                            color: rm.color,
+                            border: `1.5px solid ${rm.border}`,
+                            flexShrink: 0,
+                          }}
+                        >
                           {getInitials(u.name)}
                         </div>
                         <div className="au-user-card-info">
@@ -434,60 +579,196 @@ export default function AdminUsersPage() {
                         </div>
                       </div>
                       <div className="au-user-card-meta">
-                        <span style={{
-                          ...s.rolePill,
-                          background: rm.bg,
-                          color: rm.color,
-                          border: `1px solid ${rm.border}`,
-                        }}>
+                        <span
+                          style={{
+                            ...s.rolePill,
+                            background: rm.bg,
+                            color: rm.color,
+                            border: `1px solid ${rm.border}`,
+                          }}
+                        >
                           {rm.icon} {rm.label}
                         </span>
                         <span className="au-user-card-date">
-                          Joined {new Date(u.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          Joined{" "}
+                          {new Date(u.created_at).toLocaleDateString("en-PH", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </span>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </>
           )}
-
         </div>
       </AppLayout>
     </>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const s: Record<string, React.CSSProperties> = {
-  topRow:    { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' },
-  breadcrumb:{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' },
-  heading:   { fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(1.6rem, 4vw, 2rem)', color: '#0d3d20', margin: '0 0 0.2rem' },
-  muted:     { color: '#6b7280', fontSize: '0.9rem', margin: 0 },
+  topRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    gap: "1rem",
+    marginBottom: "1.75rem",
+  },
+  breadcrumb: {
+    fontSize: "0.72rem",
+    fontWeight: 600,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: "#1a7a40",
+    marginBottom: "0.35rem",
+  },
+  heading: {
+    fontFamily: "'DM Serif Display', serif",
+    fontSize: "clamp(1.6rem, 4vw, 2rem)",
+    color: "#0d3d20",
+    margin: "0 0 0.2rem",
+  },
+  muted: { color: "#6b7280", fontSize: "0.9rem", margin: 0 },
 
-  statGrid:  { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.75rem' },
-  statCard:  { borderRadius: '16px', padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', cursor: 'default' },
-  statIcon:  { fontSize: '1.5rem', lineHeight: 1 },
-  statNum:   { fontSize: '2rem', fontWeight: 800, lineHeight: 1, marginTop: '0.1rem' },
-  statLabel: { fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', textAlign: 'center' },
+  statGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "0.75rem",
+    marginBottom: "1.75rem",
+  },
+  statCard: {
+    borderRadius: "16px",
+    padding: "1rem 0.75rem",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "0.2rem",
+    cursor: "default",
+  },
+  statIcon: { fontSize: "1.5rem", lineHeight: 1 },
+  statNum: {
+    fontSize: "2rem",
+    fontWeight: 800,
+    lineHeight: 1,
+    marginTop: "0.1rem",
+  },
+  statLabel: {
+    fontSize: "0.65rem",
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: "#6b7280",
+    textAlign: "center",
+  },
 
-  filterBar: { display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' },
-  pillRow:   { display: 'flex', gap: '0.4rem', flexWrap: 'wrap' },
+  filterBar: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.75rem",
+    marginBottom: "1rem",
+  },
+  pillRow: { display: "flex", gap: "0.4rem", flexWrap: "wrap" },
 
-  table:     { width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: '600px' },
-  th:        { textAlign: 'left', padding: '0.8rem 1rem', background: '#0d3d20', color: '#ffd166', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700 },
-  trEven:    { background: '#fff' },
-  trOdd:     { background: '#fdfaf5' },
-  td:        { padding: '0.85rem 1rem', borderBottom: '1px solid rgba(26,122,64,0.08)', color: '#1a1f16', verticalAlign: 'middle' },
-  avatarRow: { display: 'flex', alignItems: 'center', gap: '0.65rem' },
-  avatar:    { width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.75rem', flexShrink: 0 },
-  rolePill:  { fontSize: '0.75rem', fontWeight: 700, padding: '0.28rem 0.7rem', borderRadius: '7px', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' },
-  idChip:    { fontFamily: 'monospace', fontSize: '0.72rem', color: '#9ca3af', background: '#f5f5f4', padding: '0.2rem 0.5rem', borderRadius: '5px', letterSpacing: '0.04em', cursor: 'default' },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: "0.9rem",
+    minWidth: "600px",
+  },
+  th: {
+    textAlign: "left",
+    padding: "0.8rem 1rem",
+    background: "#0d3d20",
+    color: "#ffd166",
+    fontSize: "0.65rem",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    fontWeight: 700,
+  },
+  trEven: { background: "#fff" },
+  trOdd: { background: "#fdfaf5" },
+  td: {
+    padding: "0.85rem 1rem",
+    borderBottom: "1px solid rgba(26,122,64,0.08)",
+    color: "#1a1f16",
+    verticalAlign: "middle",
+  },
+  avatarRow: { display: "flex", alignItems: "center", gap: "0.65rem" },
+  avatar: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 800,
+    fontSize: "0.75rem",
+    flexShrink: 0,
+  },
+  rolePill: {
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    padding: "0.28rem 0.7rem",
+    borderRadius: "7px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.3rem",
+    whiteSpace: "nowrap",
+  },
+  idChip: {
+    fontFamily: "monospace",
+    fontSize: "0.72rem",
+    color: "#9ca3af",
+    background: "#f5f5f4",
+    padding: "0.2rem 0.5rem",
+    borderRadius: "5px",
+    letterSpacing: "0.04em",
+    cursor: "default",
+  },
 
-  empty:     { background: '#fff', border: '1.5px solid rgba(26,122,64,0.13)', borderRadius: '18px', padding: '3rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: '#6b7280', textAlign: 'center' },
-  errorCard: { background: '#fff0f0', border: '1.5px solid rgba(155,28,28,0.18)', borderRadius: '18px', padding: '2.5rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' },
-  center:    { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
-  spinner:   { width: '40px', height: '40px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'au-spin 0.8s linear infinite' },
-}
+  empty: {
+    background: "#fff",
+    border: "1.5px solid rgba(26,122,64,0.13)",
+    borderRadius: "18px",
+    padding: "3rem 1.5rem",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "0.75rem",
+    color: "#6b7280",
+    textAlign: "center",
+  },
+  errorCard: {
+    background: "#fff0f0",
+    border: "1.5px solid rgba(155,28,28,0.18)",
+    borderRadius: "18px",
+    padding: "2.5rem 2rem",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "0.75rem",
+  },
+  center: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "60vh",
+    gap: "1rem",
+  },
+  spinner: {
+    width: "40px",
+    height: "40px",
+    border: "4px solid #eaf6ef",
+    borderTop: "4px solid #1a7a40",
+    borderRadius: "50%",
+    animation: "au-spin 0.8s linear infinite",
+  },
+};

@@ -1,108 +1,146 @@
-'use client'
+"use client";
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import type { RealtimePostgresInsertPayload } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import type { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
 
 interface AuthUser {
-  id: string
-  name: string
-  role: 'admin' | 'teacher' | 'student'
+  id: string;
+  name: string;
+  role: "admin" | "teacher" | "student";
 }
 
-export type { AuthUser }
-const AuthCtx = createContext<AuthUser | null>(null)
-export const useAuthUser = () => useContext(AuthCtx)
+export type { AuthUser };
+const AuthCtx = createContext<AuthUser | null>(null);
+export const useAuthUser = () => useContext(AuthCtx);
 
-type Role = 'admin' | 'teacher' | 'student'
+type Role = "admin" | "teacher" | "student";
 
 const NAV: Record<Role, { label: string; href: string; icon: string }[]> = {
   teacher: [
-    { label: 'Dashboard',  href: '/teacher',           icon: '▦'  },
-    { label: 'Lessons',    href: '/teacher/lessons',   icon: '📖' },
-    { label: 'Questions',  href: '/teacher/questions', icon: '❓' },
-    { label: 'Classes',    href: '/teacher/classes',   icon: '🏫' },
-    { label: 'Reports',    href: '/teacher/reports',   icon: '📊' },
-    { label: 'Alerts',     href: '/teacher/alerts',    icon: '🔔' },
+    { label: "Dashboard", href: "/teacher", icon: "▦" },
+    { label: "Lessons", href: "/teacher/lessons", icon: "📖" },
+    { label: "Questions", href: "/teacher/questions", icon: "❓" },
+    { label: "Classes", href: "/teacher/classes", icon: "🏫" },
+    { label: "Reports", href: "/teacher/reports", icon: "📊" },
+    { label: "Alerts", href: "/teacher/alerts", icon: "🔔" },
   ],
   student: [
-    { label: 'Dashboard',  href: '/student',           icon: '▦'  },
-    { label: 'Quiz',       href: '/student/quiz',      icon: '✏️' },
-    { label: 'Progress',   href: '/student/progress',  icon: '📈' },
+    { label: "Dashboard", href: "/student", icon: "▦" },
+    { label: "Quiz", href: "/student/quiz", icon: "✏️" },
+    { label: "Progress", href: "/student/progress", icon: "📈" },
   ],
   admin: [
-    { label: 'Dashboard',  href: '/admin',             icon: '▦'  },
-    { label: 'Add Teacher',href: '/admin/teacher/new',  icon: '➕' },
-    { label: 'Users',      href: '/admin/users',       icon: '👥' },
-    { label: 'Classes',    href: '/admin/classes',     icon: '🏫' },
-    { label: 'Reports',    href: '/admin/reports',     icon: '📊' },
+    { label: "Dashboard", href: "/admin", icon: "▦" },
+    { label: "Add Teacher", href: "/admin/teacher/new", icon: "➕" },
+    { label: "Users", href: "/admin/users", icon: "👥" },
+    { label: "Classes", href: "/admin/classes", icon: "🏫" },
+    { label: "Reports", href: "/admin/reports", icon: "📊" },
   ],
-}
+};
 
 const ROLE_META: Record<Role, { label: string; bg: string; color: string }> = {
-  teacher: { label: 'Teacher', bg: 'rgba(240,165,0,0.22)',  color: '#ffd166' },
-  student: { label: 'Student', bg: 'rgba(26,122,64,0.30)', color: '#a8f0c6' },
-  admin:   { label: 'Admin',   bg: 'rgba(139,26,26,0.30)', color: '#f9b4b4' },
-}
+  teacher: { label: "Teacher", bg: "rgba(240,165,0,0.22)", color: "#ffd166" },
+  student: { label: "Student", bg: "rgba(26,122,64,0.30)", color: "#a8f0c6" },
+  admin: { label: "Admin", bg: "rgba(139,26,26,0.30)", color: "#f9b4b4" },
+};
 
 function getInitials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-interface Notification { id: string; message: string; seen: boolean }
-interface Props { title: string; children: React.ReactNode }
+interface Notification {
+  id: string;
+  message: string;
+  seen: boolean;
+}
+interface Props {
+  title: string;
+  children: React.ReactNode;
+}
 
 export default function AppLayout({ title, children }: Props) {
-  const pathname = usePathname()
-  const [authUser, setAuthUser]       = useState<AuthUser | null>(null)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [notifications, setNotifs]   = useState<Notification[]>([])
-  const [bellOpen, setBellOpen]       = useState(false)
-  const bellRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname();
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifs] = useState<Notification[]>([]);
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: authData }) => {
-      const user = authData.user
-      if (!user) return
+      const user = authData.user;
+      if (!user) return;
       const { data: userData } = await supabase
-        .from('users').select('role, name').eq('id', user.id).single()
-      if (userData) setAuthUser({ id: user.id, name: userData.name, role: userData.role as Role })
-    })
-  }, [])
+        .from("users")
+        .select("role, name")
+        .eq("id", user.id)
+        .single();
+      if (userData)
+        setAuthUser({
+          id: user.id,
+          name: userData.name,
+          role: userData.role as Role,
+        });
+    });
+  }, []);
 
   useEffect(() => {
-    if (!authUser || authUser.role !== 'teacher') return
+    if (!authUser || authUser.role !== "teacher") return;
     const channel = supabase
       .channel(`alerts-${authUser.id}`)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'mastery_history' },
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "mastery_history" },
         (payload: RealtimePostgresInsertPayload<{ mastery_level: string }>) => {
-          if (payload.new.mastery_level === 'Needs Help') {
-            setNotifs(prev => [{ id: crypto.randomUUID(), message: 'A student dropped to Needs Help', seen: false }, ...prev.slice(0, 9)])
+          if (payload.new.mastery_level === "Needs Help") {
+            setNotifs((prev) => [
+              {
+                id: crypto.randomUUID(),
+                message: "A student dropped to Needs Help",
+                seen: false,
+              },
+              ...prev.slice(0, 9),
+            ]);
           }
-        }
-      ).subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [authUser])
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [authUser]);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false)
-    }
-    document.addEventListener('mousedown', fn)
-    return () => document.removeEventListener('mousedown', fn)
-  }, [])
+      if (bellRef.current && !bellRef.current.contains(e.target as Node))
+        setBellOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
 
-  useEffect(() => { setSidebarOpen(false) }, [pathname])
+  const closeSidebar = () => setSidebarOpen(false);
 
-  const unseen = notifications.filter(n => !n.seen).length
-  const markAllSeen = () => { setNotifs(p => p.map(n => ({ ...n, seen: true }))); setBellOpen(false) }
-  const handleSignOut = async () => { await supabase.auth.signOut(); window.location.href = '/login' }
+  const unseen = notifications.filter((n) => !n.seen).length;
+  const markAllSeen = () => {
+    setNotifs((p) => p.map((n) => ({ ...n, seen: true })));
+    setBellOpen(false);
+  };
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  };
 
-  const links = authUser ? NAV[authUser.role] : []
-  const meta  = authUser ? ROLE_META[authUser.role] : null
+  const links = authUser ? NAV[authUser.role] : [];
+  const meta = authUser ? ROLE_META[authUser.role] : null;
 
   return (
     <AuthCtx.Provider value={authUser}>
@@ -325,13 +363,20 @@ export default function AppLayout({ title, children }: Props) {
       `}</style>
 
       <div className="ly-shell">
-        <div className={`ly-overlay${sidebarOpen ? ' open' : ''}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+        <div
+          className={`ly-overlay${sidebarOpen ? " open" : ""}`}
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
 
-        <aside className={`ly-sb${sidebarOpen ? ' open' : ''}`} aria-label="Navigation">
+        <aside
+          className={`ly-sb${sidebarOpen ? " open" : ""}`}
+          aria-label="Navigation"
+        >
           <div className="ly-sb-logo">
-            <div className="ly-sb-mark">L</div>
+            <div className="ly-sb-mark">U</div>
             <div>
-              <div className="ly-sb-appname">Linuri</div>
+              <div className="ly-sb-appname">UMCLS</div>
               <div className="ly-sb-appsub">Adaptive Learning</div>
             </div>
           </div>
@@ -341,51 +386,96 @@ export default function AppLayout({ title, children }: Props) {
               <div className="ly-sb-avatar">{getInitials(authUser.name)}</div>
               <div style={{ minWidth: 0 }}>
                 <div className="ly-sb-uname">{authUser.name}</div>
-                <span className="ly-sb-badge" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+                <span
+                  className="ly-sb-badge"
+                  style={{ background: meta.bg, color: meta.color }}
+                >
+                  {meta.label}
+                </span>
               </div>
             </div>
           )}
 
           <nav className="ly-sb-nav">
             {links.map(({ label, href, icon }) => {
-              const active = pathname === href || (href !== '/admin' && href !== '/teacher' && href !== '/student' && pathname.startsWith(href + '/'))
+              const active =
+                pathname === href ||
+                (href !== "/admin" &&
+                  href !== "/teacher" &&
+                  href !== "/student" &&
+                  pathname.startsWith(href + "/"));
               return (
-                <Link key={href} href={href} className={`ly-sb-link${active ? ' active' : ''}`}>
-                  <span className="ly-sb-icon">{icon}</span>{label}
+                <Link
+                  key={href}
+                  href={href}
+                  className={`ly-sb-link${active ? " active" : ""}`}
+                  onClick={closeSidebar}
+                >
+                  <span className="ly-sb-icon">{icon}</span>
+                  {label}
                 </Link>
-              )
+              );
             })}
           </nav>
 
           <div className="ly-sb-footer">
-            <button onClick={handleSignOut} className="ly-signout">Sign out</button>
+            <button onClick={handleSignOut} className="ly-signout">
+              Sign out
+            </button>
           </div>
         </aside>
 
         <div className="ly-main">
           <header className="ly-header">
             <div className="ly-hdr-left">
-              <button className="ly-hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Menu" aria-expanded={sidebarOpen}>☰</button>
+              <button
+                className="ly-hamburger"
+                onClick={() => setSidebarOpen((o) => !o)}
+                aria-label="Menu"
+                aria-expanded={sidebarOpen}
+              >
+                ☰
+              </button>
               <h1 className="ly-hdr-title">{title}</h1>
             </div>
             <div className="ly-hdr-right">
-              {authUser?.role === 'teacher' && (
+              {authUser?.role === "teacher" && (
                 <div className="ly-bell-wrap" ref={bellRef}>
-                  <button className={`ly-bell-btn${unseen > 0 ? ' lit' : ''}`} onClick={() => setBellOpen(o => !o)} aria-label="Notifications">
-                    🔔{unseen > 0 && <span className="ly-bell-badge">{unseen}</span>}
+                  <button
+                    className={`ly-bell-btn${unseen > 0 ? " lit" : ""}`}
+                    onClick={() => setBellOpen((o) => !o)}
+                    aria-label="Notifications"
+                  >
+                    🔔
+                    {unseen > 0 && (
+                      <span className="ly-bell-badge">{unseen}</span>
+                    )}
                   </button>
                   {bellOpen && (
                     <div className="ly-notif-drop">
                       <div className="ly-notif-hd">
                         <span className="ly-notif-hd-title">Alerts</span>
-                        {unseen > 0 && <button onClick={markAllSeen} className="ly-notif-mark">Mark all read</button>}
+                        {unseen > 0 && (
+                          <button
+                            onClick={markAllSeen}
+                            className="ly-notif-mark"
+                          >
+                            Mark all read
+                          </button>
+                        )}
                       </div>
-                      {notifications.length === 0
-                        ? <div className="ly-notif-empty">No alerts yet</div>
-                        : notifications.slice(0, 8).map(n => (
-                            <div key={n.id} className={`ly-notif-item ${n.seen ? 'seen' : 'unseen'}`}>{n.message}</div>
-                          ))
-                      }
+                      {notifications.length === 0 ? (
+                        <div className="ly-notif-empty">No alerts yet</div>
+                      ) : (
+                        notifications.slice(0, 8).map((n) => (
+                          <div
+                            key={n.id}
+                            className={`ly-notif-item ${n.seen ? "seen" : "unseen"}`}
+                          >
+                            {n.message}
+                          </div>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
@@ -403,5 +493,5 @@ export default function AppLayout({ title, children }: Props) {
         </div>
       </div>
     </AuthCtx.Provider>
-  )
+  );
 }

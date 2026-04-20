@@ -1,5 +1,4 @@
-// /unauthorized/page.tsx
-import Link from 'next/link'
+import Link from "next/link";
 
 export default function UnauthorizedPage() {
   return (
@@ -139,7 +138,6 @@ export default function UnauthorizedPage() {
 
       <div className="unauth-page">
         <div className="unauth-card">
-
           <div className="unauth-logo">
             <div className="unauth-mark">L</div>
             <span className="unauth-mark-name">LINURI</span>
@@ -149,21 +147,22 @@ export default function UnauthorizedPage() {
 
           <h1 className="unauth-title">Access Denied</h1>
           <p className="unauth-desc">
-            You don&apos;t have permission to view that page.<br />
+            You don&apos;t have permission to view that page.
+            <br />
             Please sign in with the correct account.
           </p>
 
           <Link href="/login" className="unauth-btn">
             ← Back to login
           </Link>
-
         </div>
 
         <p className="unauth-school">
-          United Methodist Cooperative Learning System, Inc.<br />
+          United Methodist Cooperative Learning System, Inc.
+          <br />
           Caloocan City · Adaptive Learning Platform
         </p>
       </div>
     </>
-  )
+  );
 }

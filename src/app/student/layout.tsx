@@ -1,6 +1,9 @@
-// student/layout
-import { RoleGuard } from '@/components/layout'
+import { RoleGuard } from "@/components/layout";
 
-export default function StudentLayout({ children }: { children: React.ReactNode }) {
-  return <RoleGuard allow={['student']}>{children}</RoleGuard>
+export default function StudentLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <RoleGuard allow={["student"]}>{children}</RoleGuard>;
 }

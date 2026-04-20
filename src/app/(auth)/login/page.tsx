@@ -1,75 +1,75 @@
-// src/app/(auth)/login/page.tsx
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [credential, setCredential] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const [credential, setCredential] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-  setError('')
-  setLoading(true)
+    setError("");
+    setLoading(true);
 
-  const isLRN = /^\d{12}$/.test(credential.trim())
-  let authError: { message: string } | null = null
-  let userId: string | undefined
+    const isLRN = /^\d{12}$/.test(credential.trim());
+    let authError: { message: string } | null = null;
+    let userId: string | undefined;
 
-  if (isLRN) {
+    if (isLRN) {
       const { data: student, error: lookupError } = await supabase
-        .from('users')
-        .select('id, email')
-        .eq('lrn', credential.trim())
-        .eq('role', 'student')
-        .single()
+        .from("users")
+        .select("id, email")
+        .eq("lrn", credential.trim())
+        .eq("role", "student")
+        .single();
 
       if (lookupError || !student) {
-        setError('Invalid LRN or password.')
-        setLoading(false)
-        return
+        setError("Invalid LRN or password.");
+        setLoading(false);
+        return;
       }
 
-      const { error: signInError, data } = await supabase.auth.signInWithPassword({
-        email: student.email,
-        password,
-      })
-      authError = signInError
-      userId = data?.user?.id
+      const { error: signInError, data } =
+        await supabase.auth.signInWithPassword({
+          email: student.email,
+          password,
+        });
+      authError = signInError;
+      userId = data?.user?.id;
     } else {
-      const { error: signInError, data } = await supabase.auth.signInWithPassword({
-        email: credential.trim(),
-        password,
-      })
-      authError = signInError
-      userId = data?.user?.id
+      const { error: signInError, data } =
+        await supabase.auth.signInWithPassword({
+          email: credential.trim(),
+          password,
+        });
+      authError = signInError;
+      userId = data?.user?.id;
     }
 
     if (authError || !userId) {
-      setError('Invalid credentials. Please try again.')
-      setLoading(false)
-      return
+      setError("Invalid credentials. Please try again.");
+      setLoading(false);
+      return;
     }
 
     const { data: user } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .single();
 
-    if (user?.role === 'admin') router.replace('/admin')
-    else if (user?.role === 'teacher') router.replace('/teacher')
-    else if (user?.role === 'student') router.replace('/student')
+    if (user?.role === "admin") router.replace("/admin");
+    else if (user?.role === "teacher") router.replace("/teacher");
+    else if (user?.role === "student") router.replace("/student");
     else {
-      setError('Invalid account type.')
-      setLoading(false)
+      setError("Invalid account type.");
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -347,17 +347,52 @@ export default function LoginPage() {
         <div className="login-blob-br" />
 
         <div className="login-card">
-
           {/* Logo */}
           <div className="login-logo">
-            <div className="login-mark">L</div>
-            <span className="login-mark-name">LINURI</span>
-            <span className="login-mark-badge">Grade 6</span>
+            <button
+              onClick={() => router.push("/")}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                textDecoration: "none",
+              }}
+            >
+              <div className="login-mark">U</div>
+              <span className="login-mark-name">UMCLS</span>
+            </button>
+            <span
+              onClick={() => router.push("/")}
+              style={{
+                marginLeft: "auto",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: "var(--muted)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--green)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--muted)")
+              }
+            >
+              ← Home
+            </span>
           </div>
-
           {/* Heading */}
           <h1 className="login-title">Welcome back!</h1>
-          <p className="login-sub">Sign in to continue your learning journey.</p>
+          <p className="login-sub">
+            Sign in to continue your learning journey.
+          </p>
 
           {/* Error */}
           {error && (
@@ -373,24 +408,24 @@ export default function LoginPage() {
             <input
               type="text"
               value={credential}
-              onChange={e => setCredential(e.target.value)}
+              onChange={(e) => setCredential(e.target.value)}
               placeholder="Email address or 12-digit LRN"
               className="login-input"
               autoComplete="username"
-              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             />
           </div>
 
           {/* Password */}
-          <div className="login-field" style={{ marginBottom: '1.25rem' }}>
+          <div className="login-field" style={{ marginBottom: "1.25rem" }}>
             <label className="login-label">Password</label>
             <input
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="login-input"
-              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             />
           </div>
 
@@ -401,7 +436,9 @@ export default function LoginPage() {
             className="login-btn"
           >
             {loading ? (
-              <><div className="login-spinner" /> Signing in…</>
+              <>
+                <div className="login-spinner" /> Signing in…
+              </>
             ) : (
               <>Sign in →</>
             )}
@@ -409,12 +446,12 @@ export default function LoginPage() {
 
           {/* School tag */}
           <div className="login-school">
-            United Methodist Cooperative Learning System, Inc.<br />
+            United Methodist Cooperative Learning System, Inc.
+            <br />
             Caloocan City · Adaptive Learning Platform
           </div>
-
         </div>
       </div>
     </>
-  )
+  );
 }

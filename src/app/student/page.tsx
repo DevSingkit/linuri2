@@ -1,115 +1,162 @@
-// src/app/student/page.tsx
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout'
-import { supabase, getMasteryByStudent } from '@/lib/supabase'
-import type { MasteryRecord } from '@/types/linuri'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppLayout } from "@/components/layout";
+import { supabase, getMasteryByStudent } from "@/lib/supabase";
+import type { MasteryRecord } from "@/types/linuri";
 
 interface EnrolledClass {
-  class_id: string
-  classes: { name: string; section: string; } | null
-  userData?: { name: string } | null
+  class_id: string;
+  classes: { name: string; section: string } | null;
+  userData?: { name: string } | null;
 }
 
 interface LessonRow {
-  id: string
-  title: string
-  subject: string
-  skill_name: string
-  difficulty_level: string
-  file_url?: string
-  classes: { name: string; section: string } | null
+  id: string;
+  title: string;
+  subject: string;
+  skill_name: string;
+  difficulty_level: string;
+  file_url?: string;
+  classes: { name: string; section: string } | null;
 }
 
-const SUBJECT_STYLE: Record<string, { bg: string; color: string; emoji: string }> = {
-  English:     { bg: '#eef4ff', color: '#1a56b0', emoji: '📖' },
-  Mathematics: { bg: '#fff0f5', color: '#9b1a5a', emoji: '🔢' },
-  Science:     { bg: '#eaf6ef', color: '#0d3d20', emoji: '🔬' },
-}
-const DIFF_STYLE: Record<string, { bg: string; color: string; emoji: string }> = {
-  Advanced: { bg: '#fff0f0', color: '#8b1a1a', emoji: '🔥' },
-  Standard: { bg: '#fffbf0', color: '#7a5500', emoji: '⚡' },
-  Basic:    { bg: '#eaf6ef', color: '#0d3d20', emoji: '🌱' },
-}
-const MASTERY_STYLE: Record<string, { bg: string; color: string; border: string; emoji: string }> = {
-  'Mastered':   { bg: '#eaf6ef', color: '#0d3d20', border: 'rgba(26,122,64,0.25)', emoji: '⭐' },
-  'Developing': { bg: '#fffbf0', color: '#7a5500', border: 'rgba(200,130,0,0.25)', emoji: '📈' },
-  'Needs Help': { bg: '#fff0f0', color: '#8b1a1a', border: 'rgba(155,28,28,0.2)',  emoji: '💪' },
-}
+const SUBJECT_STYLE: Record<
+  string,
+  { bg: string; color: string; emoji: string }
+> = {
+  English: { bg: "#eef4ff", color: "#1a56b0", emoji: "📖" },
+  Mathematics: { bg: "#fff0f5", color: "#9b1a5a", emoji: "🔢" },
+  Science: { bg: "#eaf6ef", color: "#0d3d20", emoji: "🔬" },
+};
+const DIFF_STYLE: Record<string, { bg: string; color: string; emoji: string }> =
+  {
+    Advanced: { bg: "#fff0f0", color: "#8b1a1a", emoji: "🔥" },
+    Standard: { bg: "#fffbf0", color: "#7a5500", emoji: "⚡" },
+    Basic: { bg: "#eaf6ef", color: "#0d3d20", emoji: "🌱" },
+  };
+const MASTERY_STYLE: Record<
+  string,
+  { bg: string; color: string; border: string; emoji: string }
+> = {
+  Mastered: {
+    bg: "#eaf6ef",
+    color: "#0d3d20",
+    border: "rgba(26,122,64,0.25)",
+    emoji: "⭐",
+  },
+  Developing: {
+    bg: "#fffbf0",
+    color: "#7a5500",
+    border: "rgba(200,130,0,0.25)",
+    emoji: "📈",
+  },
+  "Needs Help": {
+    bg: "#fff0f0",
+    color: "#8b1a1a",
+    border: "rgba(155,28,28,0.2)",
+    emoji: "💪",
+  },
+};
 
 export default function StudentDashboardPage() {
-  const router = useRouter()
-  const [name, setName]       = useState('')
-  const [lessons, setLessons] = useState<LessonRow[]>([])
-  const [classes, setClasses] = useState<EnrolledClass[]>([])
-  const [mastery, setMastery] = useState<MasteryRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [lessons, setLessons] = useState<LessonRow[]>([]);
+  const [classes, setClasses] = useState<EnrolledClass[]>([]);
+  const [mastery, setMastery] = useState<MasteryRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-        if (authError || !user) { router.replace('/login'); return }
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.replace("/login");
+          return;
+        }
 
-        const { data: userData } = await supabase.from('users').select('name').eq('id', user.id).single()
-        setName(userData?.name ?? '')
+        const { data: userData } = await supabase
+          .from("users")
+          .select("name")
+          .eq("id", user.id)
+          .single();
+        setName(userData?.name ?? "");
 
         const { data: enrollData } = await supabase
-          .from('enrollments')
-          .select('class_id, classes(name, section, join_code)')
-          .eq('student_id', user.id)
-        setClasses((enrollData as unknown as EnrolledClass[]) ?? [])
+          .from("enrollments")
+          .select("class_id, classes(name, section, join_code)")
+          .eq("student_id", user.id);
+        setClasses((enrollData as unknown as EnrolledClass[]) ?? []);
 
-        const classIds = ((enrollData as unknown as EnrolledClass[]) ?? []).map(e => e.class_id)
-        let lessonRows: LessonRow[] = []
+        const classIds = ((enrollData as unknown as EnrolledClass[]) ?? []).map(
+          (e) => e.class_id,
+        );
+        let lessonRows: LessonRow[] = [];
         if (classIds.length > 0) {
           const { data: lessonData } = await supabase
-            .from('lessons')
-            .select('id, title, subject, skill_name, difficulty_level, file_url, classes(name, section)')
-            .in('class_id', classIds)
-            .eq('is_published', true)
-            .order('created_at', { ascending: false })
-            .limit(6)
-          lessonRows = (lessonData as unknown as LessonRow[]) ?? []
+            .from("lessons")
+            .select(
+              "id, title, subject, skill_name, difficulty_level, file_url, classes(name, section)",
+            )
+            .in("class_id", classIds)
+            .eq("is_published", true)
+            .order("created_at", { ascending: false })
+            .limit(6);
+          lessonRows = (lessonData as unknown as LessonRow[]) ?? [];
         }
-        setLessons(lessonRows)
+        setLessons(lessonRows);
 
-        const { data: masteryData } = await getMasteryByStudent(user.id)
-        setMastery(masteryData ?? [])
+        const { data: masteryData } = await getMasteryByStudent(user.id);
+        setMastery(masteryData ?? []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load.')
+        setError(err instanceof Error ? err.message : "Failed to load.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    load()
-  }, [router])
+    load();
+  }, [router]);
 
-  if (loading) return (
-    <AppLayout title="Dashboard">
-      <div style={s.center}>
-        <div style={s.spinner} />
-        <p style={s.muted}>Loading your adventure…</p>
-      </div>
-    </AppLayout>
-  )
+  if (loading)
+    return (
+      <AppLayout title="Dashboard">
+        <div style={s.center}>
+          <div style={s.spinner} />
+          <p style={s.muted}>Loading your adventure…</p>
+        </div>
+      </AppLayout>
+    );
 
-  if (error) return (
-    <AppLayout title="Dashboard">
-      <div style={s.center}><p style={{ color: '#8b1a1a' }}>{error}</p></div>
-    </AppLayout>
-  )
+  if (error)
+    return (
+      <AppLayout title="Dashboard">
+        <div style={s.center}>
+          <p style={{ color: "#8b1a1a" }}>{error}</p>
+        </div>
+      </AppLayout>
+    );
 
-  const mastered   = mastery.filter(m => m.mastery_level === 'Mastered').length
-  const developing = mastery.filter(m => m.mastery_level === 'Developing').length
-  const needsHelp  = mastery.filter(m => m.mastery_level === 'Needs Help').length
+  const mastered = mastery.filter((m) => m.mastery_level === "Mastered").length;
+  const developing = mastery.filter(
+    (m) => m.mastery_level === "Developing",
+  ).length;
+  const needsHelp = mastery.filter(
+    (m) => m.mastery_level === "Needs Help",
+  ).length;
 
-  const timeOfDay = new Date().getHours()
-  const greeting  = timeOfDay < 12 ? 'Good morning' : timeOfDay < 17 ? 'Good afternoon' : 'Good evening'
+  const timeOfDay = new Date().getHours();
+  const greeting =
+    timeOfDay < 12
+      ? "Good morning"
+      : timeOfDay < 17
+        ? "Good afternoon"
+        : "Good evening";
 
   return (
     <>
@@ -395,20 +442,50 @@ export default function StudentDashboardPage() {
       `}</style>
 
       <AppLayout title="Dashboard">
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1rem 1rem 3rem', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-
+        <div
+          style={{
+            maxWidth: "900px",
+            margin: "0 auto",
+            padding: "1rem 1rem 3rem",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+          }}
+        >
           {/* Hero Banner */}
           <div className="sd-hero">
             <div className="sd-hero-emoji">🎒</div>
-            <p className="sd-hero-greeting">{greeting},<br />{name || 'Learner'}! 👋</p>
+            <p className="sd-hero-greeting">
+              {greeting},<br />
+              {name || "Learner"}! 👋
+            </p>
             <p className="sd-hero-sub">Ready to level up your skills today?</p>
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-              <button className="sd-btn-primary" onClick={() => router.push('/student/quiz')}
-                style={{ background: '#f0a500', color: '#0d3d20', flex: '0 0 auto', minWidth: 'unset', padding: '0.75rem 1.4rem', fontSize: '0.92rem' }}>
+            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+              <button
+                className="sd-btn-primary"
+                onClick={() => router.push("/student/quiz")}
+                style={{
+                  background: "#f0a500",
+                  color: "#0d3d20",
+                  flex: "0 0 auto",
+                  minWidth: "unset",
+                  padding: "0.75rem 1.4rem",
+                  fontSize: "0.92rem",
+                }}
+              >
                 🎯 Start a Quiz
               </button>
-              <button className="sd-btn-outline" onClick={() => router.push('/student/progress')}
-                style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', borderColor: 'rgba(255,255,255,0.25)', flex: '0 0 auto', minWidth: 'unset', padding: '0.75rem 1.4rem', fontSize: '0.92rem' }}>
+              <button
+                className="sd-btn-outline"
+                onClick={() => router.push("/student/progress")}
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  color: "#fff",
+                  borderColor: "rgba(255,255,255,0.25)",
+                  flex: "0 0 auto",
+                  minWidth: "unset",
+                  padding: "0.75rem 1.4rem",
+                  fontSize: "0.92rem",
+                }}
+              >
                 📊 My Progress
               </button>
             </div>
@@ -417,14 +494,48 @@ export default function StudentDashboardPage() {
           {/* Stat cards */}
           <div className="sd-stat-grid">
             {[
-              { num: mastery.length, label: 'Skills Tracked', emoji: '🧠', bg: '#fdfaf5', color: '#0d3d20', border: '2px solid rgba(26,122,64,0.13)' },
-              { num: mastered,       label: 'Mastered',       emoji: '⭐', bg: '#eaf6ef', color: '#0d5c28', border: '2px solid rgba(26,122,64,0.22)' },
-              { num: developing,     label: 'Developing',     emoji: '📈', bg: '#fffbf0', color: '#7a5500', border: '2px solid rgba(200,130,0,0.20)' },
-              { num: needsHelp,      label: 'Needs Help',     emoji: '💪', bg: '#fff0f0', color: '#8b1a1a', border: '2px solid rgba(155,28,28,0.18)' },
+              {
+                num: mastery.length,
+                label: "Skills Tracked",
+                emoji: "🧠",
+                bg: "#fdfaf5",
+                color: "#0d3d20",
+                border: "2px solid rgba(26,122,64,0.13)",
+              },
+              {
+                num: mastered,
+                label: "Mastered",
+                emoji: "⭐",
+                bg: "#eaf6ef",
+                color: "#0d5c28",
+                border: "2px solid rgba(26,122,64,0.22)",
+              },
+              {
+                num: developing,
+                label: "Developing",
+                emoji: "📈",
+                bg: "#fffbf0",
+                color: "#7a5500",
+                border: "2px solid rgba(200,130,0,0.20)",
+              },
+              {
+                num: needsHelp,
+                label: "Needs Help",
+                emoji: "💪",
+                bg: "#fff0f0",
+                color: "#8b1a1a",
+                border: "2px solid rgba(155,28,28,0.18)",
+              },
             ].map(({ num, label, emoji, bg, color, border }) => (
-              <div key={label} className="sd-stat-card" style={{ background: bg, border }}>
+              <div
+                key={label}
+                className="sd-stat-card"
+                style={{ background: bg, border }}
+              >
                 <span className="sd-stat-emoji">{emoji}</span>
-                <span className="sd-stat-num" style={{ color }}>{num}</span>
+                <span className="sd-stat-num" style={{ color }}>
+                  {num}
+                </span>
                 <span className="sd-stat-label">{label}</span>
               </div>
             ))}
@@ -433,57 +544,131 @@ export default function StudentDashboardPage() {
           {/* Available Lessons */}
           <section className="sd-section">
             <div className="sd-section-head">
-              <div className="sd-section-icon" style={{ background: '#eaf6ef' }}>📚</div>
+              <div
+                className="sd-section-icon"
+                style={{ background: "#eaf6ef" }}
+              >
+                📚
+              </div>
               <h2 className="sd-section-title">Available Lessons</h2>
             </div>
             {lessons.length === 0 ? (
-              <div className="sd-empty">📭 No lessons published yet. Check back soon!</div>
+              <div className="sd-empty">
+                📭 No lessons published yet. Check back soon!
+              </div>
             ) : (
               <div className="sd-lesson-grid">
-                {lessons.map(lesson => {
-                  const sub  = SUBJECT_STYLE[lesson.subject]  ?? { bg: '#f5f5f5', color: '#333', emoji: '📄' }
-                  const diff = DIFF_STYLE[lesson.difficulty_level] ?? { bg: '#f5f5f5', color: '#333', emoji: '' }
+                {lessons.map((lesson) => {
+                  const sub = SUBJECT_STYLE[lesson.subject] ?? {
+                    bg: "#f5f5f5",
+                    color: "#333",
+                    emoji: "📄",
+                  };
+                  const diff = DIFF_STYLE[lesson.difficulty_level] ?? {
+                    bg: "#f5f5f5",
+                    color: "#333",
+                    emoji: "",
+                  };
                   return (
                     <div key={lesson.id} className="sd-lesson-card">
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        <span className="sd-pill" style={{ background: sub.bg, color: sub.color }}>{sub.emoji} {lesson.subject}</span>
-                        <span className="sd-pill" style={{ background: diff.bg, color: diff.color }}>{diff.emoji} {lesson.difficulty_level}</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.4rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          className="sd-pill"
+                          style={{ background: sub.bg, color: sub.color }}
+                        >
+                          {sub.emoji} {lesson.subject}
+                        </span>
+                        <span
+                          className="sd-pill"
+                          style={{ background: diff.bg, color: diff.color }}
+                        >
+                          {diff.emoji} {lesson.difficulty_level}
+                        </span>
                       </div>
                       <span className="sd-lesson-title">{lesson.title}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600 }}>🎯 {lesson.skill_name}</span>
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#6b7280",
+                          fontWeight: 600,
+                        }}
+                      >
+                        🎯 {lesson.skill_name}
+                      </span>
                       {lesson.file_url && (
-                        <a href={lesson.file_url} target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: '0.75rem', color: '#1a7a40', fontWeight: 700, textDecoration: 'none', background: '#eaf6ef', padding: '0.25rem 0.65rem', borderRadius: '8px', alignSelf: 'flex-start' }}>
+                        <a
+                          href={lesson.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#1a7a40",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            background: "#eaf6ef",
+                            padding: "0.25rem 0.65rem",
+                            borderRadius: "8px",
+                            alignSelf: "flex-start",
+                          }}
+                        >
                           📎 Download file
                         </a>
                       )}
-                      <button className="sd-btn-start" onClick={() => router.push(`/student/quiz?lesson_id=${lesson.id}`)}>
+                      <button
+                        className="sd-btn-start"
+                        onClick={() =>
+                          router.push(`/student/quiz?lesson_id=${lesson.id}`)
+                        }
+                      >
                         Start Quiz →
                       </button>
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
             {lessons.length >= 6 && (
-              <button className="sd-see-all" onClick={() => router.push('/student/lessons')}>See all lessons →</button>
+              <button
+                className="sd-see-all"
+                onClick={() => router.push("/student/lessons")}
+              >
+                See all lessons →
+              </button>
             )}
           </section>
 
           {/* My Classes */}
           <section className="sd-section">
             <div className="sd-section-head">
-              <div className="sd-section-icon" style={{ background: '#fffbf0' }}>🏫</div>
+              <div
+                className="sd-section-icon"
+                style={{ background: "#fffbf0" }}
+              >
+                🏫
+              </div>
               <h2 className="sd-section-title">My Classes</h2>
             </div>
             {classes.length === 0 ? (
-              <div className="sd-empty">🏫 Not enrolled in any class yet. Ask your teacher for a join code!</div>
+              <div className="sd-empty">
+                🏫 Not enrolled in any class yet. Ask your teacher for a join
+                code!
+              </div>
             ) : (
               <div className="sd-class-grid">
                 {classes.map((c, i) => (
                   <div key={i} className="sd-class-card">
-                    <span className="sd-class-name">{c.classes?.name ?? '—'} · {c.classes?.section ?? ''}</span>
-                    <span className="sd-class-code">Teacher: {c.userData?.name ?? '—'}</span>
+                    <span className="sd-class-name">
+                      {c.classes?.name ?? "—"} · {c.classes?.section ?? ""}
+                    </span>
+                    <span className="sd-class-code">
+                      Teacher: {c.userData?.name ?? "—"}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -493,57 +678,121 @@ export default function StudentDashboardPage() {
           {/* Recent Skills */}
           <section className="sd-section">
             <div className="sd-section-head">
-              <div className="sd-section-icon" style={{ background: '#edf2ff' }}>🏆</div>
+              <div
+                className="sd-section-icon"
+                style={{ background: "#edf2ff" }}
+              >
+                🏆
+              </div>
               <h2 className="sd-section-title">Recent Skills</h2>
             </div>
             {mastery.length === 0 ? (
-              <div className="sd-empty">📝 No quiz attempts yet. Start your first quiz to see progress here!</div>
+              <div className="sd-empty">
+                📝 No quiz attempts yet. Start your first quiz to see progress
+                here!
+              </div>
             ) : (
               <div className="sd-table-wrap">
                 <table className="sd-table">
                   <thead>
                     <tr>
-                      {['Skill', 'Subject', 'Difficulty', 'Mastery'].map(h => (
-                        <th key={h} className="sd-th">{h}</th>
-                      ))}
+                      {["Skill", "Subject", "Difficulty", "Mastery"].map(
+                        (h) => (
+                          <th key={h} className="sd-th">
+                            {h}
+                          </th>
+                        ),
+                      )}
                     </tr>
                   </thead>
                   <tbody>
                     {mastery.slice(0, 5).map((m, i) => {
-                      const ms = MASTERY_STYLE[m.mastery_level] ?? { bg: '#f5f5f5', color: '#333', border: '#ccc', emoji: '' }
+                      const ms = MASTERY_STYLE[m.mastery_level] ?? {
+                        bg: "#f5f5f5",
+                        color: "#333",
+                        border: "#ccc",
+                        emoji: "",
+                      };
                       return (
-                        <tr key={i} className={`sd-tr ${i % 2 === 0 ? 'sd-tr-even' : 'sd-tr-odd'}`}>
-                          <td className="sd-td" style={{ fontWeight: 600, color: '#0d3d20' }}>{m.skill_name}</td>
+                        <tr
+                          key={i}
+                          className={`sd-tr ${i % 2 === 0 ? "sd-tr-even" : "sd-tr-odd"}`}
+                        >
+                          <td
+                            className="sd-td"
+                            style={{ fontWeight: 600, color: "#0d3d20" }}
+                          >
+                            {m.skill_name}
+                          </td>
                           <td className="sd-td">{m.subject}</td>
                           <td className="sd-td">{m.difficulty_level}</td>
                           <td className="sd-td">
-                            <span className="sd-pill" style={{ background: ms.bg, color: ms.color, border: `1px solid ${ms.border}`, fontWeight: 700 }}>
+                            <span
+                              className="sd-pill"
+                              style={{
+                                background: ms.bg,
+                                color: ms.color,
+                                border: `1px solid ${ms.border}`,
+                                fontWeight: 700,
+                              }}
+                            >
                               {ms.emoji} {m.mastery_level}
                             </span>
                           </td>
                         </tr>
-                      )
+                      );
                     })}
                   </tbody>
                 </table>
               </div>
             )}
             {mastery.length > 5 && (
-              <button className="sd-see-all" onClick={() => router.push('/student/progress')}>
+              <button
+                className="sd-see-all"
+                onClick={() => router.push("/student/progress")}
+              >
                 See all {mastery.length} skills →
               </button>
             )}
           </section>
-
         </div>
       </AppLayout>
     </>
-  )
+  );
 }
 
 const s: Record<string, React.CSSProperties> = {
-  muted:   { color: '#6b7280', fontSize: '0.9rem', fontFamily: "'Nunito', sans-serif", fontWeight: 700 },
-  empty:   { background: '#fff', border: '2px dashed rgba(26,122,64,0.2)', borderRadius: '18px', padding: '2.5rem', textAlign: 'center', fontSize: '1rem', color: '#6b7280', fontFamily: "'Nunito', sans-serif", fontWeight: 700 },
-  center:  { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' },
-  spinner: { width: '40px', height: '40px', border: '4px solid #eaf6ef', borderTop: '4px solid #1a7a40', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-}
+  muted: {
+    color: "#6b7280",
+    fontSize: "0.9rem",
+    fontFamily: "'Nunito', sans-serif",
+    fontWeight: 700,
+  },
+  empty: {
+    background: "#fff",
+    border: "2px dashed rgba(26,122,64,0.2)",
+    borderRadius: "18px",
+    padding: "2.5rem",
+    textAlign: "center",
+    fontSize: "1rem",
+    color: "#6b7280",
+    fontFamily: "'Nunito', sans-serif",
+    fontWeight: 700,
+  },
+  center: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "60vh",
+    gap: "1rem",
+  },
+  spinner: {
+    width: "40px",
+    height: "40px",
+    border: "4px solid #eaf6ef",
+    borderTop: "4px solid #1a7a40",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+  },
+};

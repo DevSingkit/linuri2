@@ -1,10 +1,10 @@
 // src/app/page.tsx
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <>
@@ -720,7 +720,6 @@ export default function LandingPage() {
       `}</style>
 
       <div className="lp">
-
         {/* ── NAV ── */}
         <nav className="lp-nav">
           <div className="lp-nav-brand">
@@ -728,7 +727,9 @@ export default function LandingPage() {
             <span className="lp-nav-name">UMCLS</span>
           </div>
           <div className="lp-nav-actions">
-            <button className="btn-ghost" onClick={() => router.push('/login')}>Log in</button>
+            <button className="btn-ghost" onClick={() => router.push("/login")}>
+              Log in
+            </button>
           </div>
         </nav>
 
@@ -736,7 +737,7 @@ export default function LandingPage() {
         <section className="lp-hero">
           <div className="lp-hero-bg" />
           <div className="lp-hero-dots" />
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: "relative" }}>
             <div className="lp-eyebrow">
               <span className="lp-pulse" />
               United Methodist Cooperative Learning System
@@ -745,15 +746,25 @@ export default function LandingPage() {
               Every student learns at their <em>own pace.</em>
             </h1>
             <p className="lp-hero-sub">
-              LINURI tracks students' activity in subjects — then adapts the difficulty so that the teacher can have a better understanding of each student's progress.
+              LINURI tracks students&apos; activity in subjects — then adapts
+              the difficulty so that the teacher can have a better understanding
+              of each student&apos;s progress.
             </p>
             <div className="lp-hero-btns">
-              <button className="btn-hero-prim" onClick={() => router.push('/login')}>
+              <button
+                className="btn-hero-prim"
+                onClick={() => router.push("/login")}
+              >
                 ✦ Get Started
               </button>
             </div>
             <div className="lp-hero-badges">
-              {['Flexibility', ' Mastery Tracking', 'Learning Hints', 'Adaptive Difficulty'].map(b => (
+              {[
+                "Flexibility",
+                " Mastery Tracking",
+                "Learning Hints",
+                "Adaptive Difficulty",
+              ].map((b) => (
                 <span key={b} className="lp-badge">
                   <span className="lp-badge-dot" />
                   {b}
@@ -775,7 +786,9 @@ export default function LandingPage() {
         <div className="lp-school">
           <span className="lp-school-label">Developed for</span>
           <span className="lp-school-sep" />
-          <span className="lp-school-name">United Methodist Cooperative Learning System, Inc.</span>
+          <span className="lp-school-name">
+            United Methodist Cooperative Learning System, Inc.
+          </span>
           <span className="lp-school-sep" />
           <span className="lp-school-label">Caloocan City</span>
         </div>
@@ -783,19 +796,66 @@ export default function LandingPage() {
         {/* ── FEATURES ── */}
         <div className="lp-section">
           <div className="lp-eyebrow-sm">What LINURI Does</div>
-          <h2 className="lp-section-title">Smarter learning,<br />powered by AI</h2>
+          <h2 className="lp-section-title">
+            Smarter learning,
+            <br />
+            powered by AI
+          </h2>
           <p className="lp-section-desc">
-            LINURI combines a decision-tree classifier with Google Gemini to give every student a personalized learning path — automatically.
+            LINURI combines a decision-tree classifier with Google Gemini to
+            give every student a personalized learning path — automatically.
           </p>
           <div className="lp-feat-grid">
             {[
-              { icon: '🎯', color: 'fi-g', title: 'Adaptive Difficulty', tag: 'tag-live', tagLabel: 'Auto-adjusts', desc: "After every quiz, LINURI adjusts the difficulty level — Basic, Standard, or Advanced — based on the student's mastery score." },
-              { icon: '💡', color: 'fi-y', title: 'AI-Generated Hints', tag: 'tag-ai', tagLabel: 'Gemini AI', desc: 'When a student is stuck, Gemini AI generates a context-aware hint for the question — no generic answers.' },
-              { icon: '📊', color: 'fi-b', title: 'Mastery Tracking', tag: 'tag-live', tagLabel: 'Live Data', desc: 'Every quiz attempt is saved. Teachers and admins can see who is Mastered, Developing, or Needs Help at a glance.' },
-              { icon: '🚩', color: 'fi-r', title: 'Regression Alerts', tag: 'tag-warn', tagLabel: 'Early Warning', desc: 'Students who regress two or more times on a skill are automatically flagged so teachers can intervene early.' },
-              { icon: '📝', color: 'fi-y', title: 'Teacher Lesson Builder', tag: 'tag-ai', tagLabel: 'Gemini AI', desc: 'Teachers input a lesson topic and LINURI auto-generates multiple-choice questions using Gemini — ready to review and publish.' },
-              { icon: '🏫', color: 'fi-g', title: 'Class Management', tag: 'tag-live', tagLabel: 'Simple Setup', desc: 'Create class sections with auto-generated join codes. Students enrol instantly — no manual setup needed.' },
-            ].map(f => (
+              {
+                icon: "🎯",
+                color: "fi-g",
+                title: "Adaptive Difficulty",
+                tag: "tag-live",
+                tagLabel: "Auto-adjusts",
+                desc: "After every quiz, LINURI adjusts the difficulty level — Basic, Standard, or Advanced — based on the student's mastery score.",
+              },
+              {
+                icon: "💡",
+                color: "fi-y",
+                title: "AI-Generated Hints",
+                tag: "tag-ai",
+                tagLabel: "Gemini AI",
+                desc: "When a student is stuck, Gemini AI generates a context-aware hint for the question — no generic answers.",
+              },
+              {
+                icon: "📊",
+                color: "fi-b",
+                title: "Mastery Tracking",
+                tag: "tag-live",
+                tagLabel: "Live Data",
+                desc: "Every quiz attempt is saved. Teachers and admins can see who is Mastered, Developing, or Needs Help at a glance.",
+              },
+              {
+                icon: "🚩",
+                color: "fi-r",
+                title: "Regression Alerts",
+                tag: "tag-warn",
+                tagLabel: "Early Warning",
+                desc: "Students who regress two or more times on a skill are automatically flagged so teachers can intervene early.",
+              },
+              {
+                icon: "📝",
+                color: "fi-y",
+                title: "Teacher Lesson Builder",
+                tag: "tag-ai",
+                tagLabel: "Gemini AI",
+                desc: "Teachers input a lesson topic and LINURI auto-generates multiple-choice questions using Gemini — ready to review and publish.",
+              },
+              {
+                icon: "🏫",
+                color: "fi-g",
+                title: "Class Management",
+                tag: "tag-live",
+                tagLabel: "Simple Setup",
+                desc: "Create class sections with auto-generated join codes. Students enrol instantly — no manual setup needed.",
+              },
+            ].map((f) => (
               <div key={f.title} className="lp-feat">
                 <div className={`lp-feat-icon ${f.color}`}>{f.icon}</div>
                 <h3>{f.title}</h3>
@@ -810,17 +870,38 @@ export default function LandingPage() {
         <div className="lp-how-wrap">
           <div className="lp-how">
             <div className="lp-eyebrow-sm">How It Works</div>
-            <h2 className="lp-section-title">From lesson to mastery<br />in four steps</h2>
+            <h2 className="lp-section-title">
+              From lesson to mastery
+              <br />
+              in four steps
+            </h2>
             <p className="lp-section-desc">
-              The adaptive loop keeps running until every student reaches mastery.
+              The adaptive loop keeps running until every student reaches
+              mastery.
             </p>
             <div className="lp-steps">
               {[
-                { n: '01', title: 'Teacher creates a lesson', desc: 'Enter a topic, subject, and difficulty. Gemini generates 10 multiple-choice questions automatically.' },
-                { n: '02', title: 'Student takes the quiz', desc: 'Each question has a 60-second timer. Hints are available when time runs out or when the student asks.' },
-                { n: '03', title: 'Classifier scores mastery', desc: 'The decision-tree analyses accuracy and assigns a mastery level: Needs Help, Developing, or Mastered.' },
-                { n: '04', title: 'Adaptive router picks next step', desc: 'Based on mastery, the system routes the student to the right difficulty level for the next quiz.' },
-              ].map(s => (
+                {
+                  n: "01",
+                  title: "Teacher creates a lesson",
+                  desc: "Enter a topic, subject, and difficulty. Gemini generates 10 multiple-choice questions automatically.",
+                },
+                {
+                  n: "02",
+                  title: "Student takes the quiz",
+                  desc: "Each question has a 60-second timer. Hints are available when time runs out or when the student asks.",
+                },
+                {
+                  n: "03",
+                  title: "Classifier scores mastery",
+                  desc: "The decision-tree analyses accuracy and assigns a mastery level: Needs Help, Developing, or Mastered.",
+                },
+                {
+                  n: "04",
+                  title: "Adaptive router picks next step",
+                  desc: "Based on mastery, the system routes the student to the right difficulty level for the next quiz.",
+                },
+              ].map((s) => (
                 <div key={s.n} className="lp-step">
                   <div className="lp-step-bg-num">{s.n}</div>
                   <div className="lp-step-n">Step {s.n}</div>
@@ -835,25 +916,54 @@ export default function LandingPage() {
         {/* ── ROLES ── */}
         <div className="lp-section">
           <div className="lp-eyebrow-sm">User Roles</div>
-          <h2 className="lp-section-title">Built for everyone<br />in the classroom</h2>
+          <h2 className="lp-section-title">
+            Built for everyone
+            <br />
+            in the classroom
+          </h2>
           <p className="lp-section-desc">
-            LINURI has three distinct roles, each with their own dashboard and tools.
+            LINURI has three distinct roles, each with their own dashboard and
+            tools.
           </p>
           <div className="lp-roles">
             {[
               {
-                av: 'av-s', icon: '👦', role: 'Student', sub: 'join via class link',
-                items: ['Take adaptive quizzes in Any Subject', 'Get AI-powered hints for some help without giving out the answer', 'Track personal mastery progress over time', 'Enrol in class with a join code'],
+                av: "av-s",
+                icon: "👦",
+                role: "Student",
+                sub: "join via class link",
+                items: [
+                  "Take adaptive quizzes in Any Subject",
+                  "Get AI-powered hints for some help without giving out the answer",
+                  "Track personal mastery progress over time",
+                  "Enrol in class with a join code",
+                ],
               },
               {
-                av: 'av-t', icon: '👩‍🏫', role: 'Teacher', sub: 'Created by admin',
-                items: ['Create class sections with join codes', 'Generate lessons and questions via Gemini AI', 'Review and approve questions before publishing', 'Monitor class mastery and flagged students'],
+                av: "av-t",
+                icon: "👩‍🏫",
+                role: "Teacher",
+                sub: "Created by admin",
+                items: [
+                  "Create class sections with join codes",
+                  "Generate lessons and questions via Gemini AI",
+                  "Review and approve questions before publishing",
+                  "Monitor class mastery and flagged students",
+                ],
               },
               {
-                av: 'av-a', icon: '🏛', role: 'Admin', sub: 'Manually created',
-                items: ['View all users, classes, and mastery records', 'Access school-wide mastery report by subject', 'Print reports directly from the dashboard', 'Oversee the entire LINURI system'],
+                av: "av-a",
+                icon: "🏛",
+                role: "Admin",
+                sub: "Manually created",
+                items: [
+                  "View all users, classes, and mastery records",
+                  "Access school-wide mastery report by subject",
+                  "Print reports directly from the dashboard",
+                  "Oversee the entire LINURI system",
+                ],
               },
-            ].map(r => (
+            ].map((r) => (
               <div key={r.role} className="lp-role">
                 <div className="lp-role-head">
                   <div className={`lp-role-av ${r.av}`}>{r.icon}</div>
@@ -863,7 +973,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="lp-role-body">
-                  {r.items.map(item => (
+                  {r.items.map((item) => (
                     <div key={item} className="lp-role-item">
                       <span className="lp-role-dot" />
                       {item}
@@ -879,13 +989,30 @@ export default function LandingPage() {
         <div className="lp-mastery-wrap">
           <div className="lp-mastery">
             <div className="lp-eyebrow-sm">Mastery Framework</div>
-            <h2 className="lp-section-title">Three levels. One goal: Mastery.</h2>
+            <h2 className="lp-section-title">
+              Three levels. One goal: Mastery.
+            </h2>
             <div className="lp-mastery-cards">
               {[
-                { cls: 'lp-mc-nh', icon: '📌', title: 'Needs Help', desc: 'The student scored below the threshold. LINURI steps down to Basic difficulty and encourages re-attempt with hints enabled.' },
-                { cls: 'lp-mc-dv', icon: '📈', title: 'Developing', desc: 'The student is on track but not yet consistent. LINURI keeps difficulty at Standard and monitors for regression.' },
-                { cls: 'lp-mc-ms', icon: '🌟', title: 'Mastered', desc: 'The student has demonstrated consistent accuracy. LINURI advances them to Advanced difficulty for continued growth.' },
-              ].map(m => (
+                {
+                  cls: "lp-mc-nh",
+                  icon: "📌",
+                  title: "Needs Help",
+                  desc: "The student scored below the threshold. LINURI steps down to Basic difficulty and encourages re-attempt with hints enabled.",
+                },
+                {
+                  cls: "lp-mc-dv",
+                  icon: "📈",
+                  title: "Developing",
+                  desc: "The student is on track but not yet consistent. LINURI keeps difficulty at Standard and monitors for regression.",
+                },
+                {
+                  cls: "lp-mc-ms",
+                  icon: "🌟",
+                  title: "Mastered",
+                  desc: "The student has demonstrated consistent accuracy. LINURI advances them to Advanced difficulty for continued growth.",
+                },
+              ].map((m) => (
                 <div key={m.cls} className={`lp-mc ${m.cls}`}>
                   <span className="lp-mc-icon">{m.icon}</span>
                   <div className="lp-mc-title">{m.title}</div>
@@ -898,12 +1025,20 @@ export default function LandingPage() {
 
         {/* ── CTA ── */}
         <div className="lp-cta">
-          <h2>Ready to start your<br />adaptive learning journey?</h2>
+          <h2>
+            Ready to start your
+            <br />
+            adaptive learning journey?
+          </h2>
           <p>
-            Join the students and teachers of United Methodist Cooperative Learning System, Inc.
+            Join the students and teachers of United Methodist Cooperative
+            Learning System, Inc.
           </p>
           <div className="lp-cta-btns">
-            <button className="btn-hero-prim" onClick={() => router.push('/register')}>
+            <button
+              className="btn-hero-prim"
+              onClick={() => router.push("/register")}
+            >
               ✦ Log in
             </button>
           </div>
@@ -916,13 +1051,14 @@ export default function LandingPage() {
             <span className="lp-footer-name">LINURI</span>
           </div>
           <div className="lp-footer-meta">
-            Literacy and Numeracy Readiness Indicator<br />
-            United Methodist Cooperative Learning System, Inc. · Caloocan City<br />
+            Literacy and Numeracy Readiness Indicator
+            <br />
+            United Methodist Cooperative Learning System, Inc. · Caloocan City
+            <br />
             Immaculada Concepcion College of Soldiers Hills
           </div>
         </footer>
-
       </div>
     </>
-  )
+  );
 }

@@ -1,51 +1,68 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout'
-import { supabase } from '@/lib/supabase'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppLayout } from "@/components/layout";
+import { supabase } from "@/lib/supabase";
 
-const SUBJECTS = ['English', 'Mathematics', 'Science'] as const
-type Subject = typeof SUBJECTS[number]
+const SUBJECTS = ["English", "Mathematics", "Science"] as const;
+type Subject = (typeof SUBJECTS)[number];
 
 export default function NewTeacherPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [tempPassword, setTempPassword] = useState('')
-  const [section, setSection] = useState('')
-  const [subjects, setSubjects] = useState<Subject[]>([])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [tempPassword, setTempPassword] = useState("");
+  const [section, setSection] = useState("");
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const toggleSubject = (s: Subject) =>
-    setSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
+    setSubjects((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+    );
 
   const handleCreate = async () => {
-    setError('')
-    setSuccess('')
+    setError("");
+    setSuccess("");
 
-    if (!fullName.trim()) { setError('Full name is required.'); return }
-    if (!email.trim() || !email.includes('@')) { setError('A valid email is required.'); return }
-    if (tempPassword.length < 6) { setError('Password must be at least 6 characters.'); return }
-    if (!section.trim()) { setError('Section is required.'); return }
-    if (subjects.length === 0) { setError('Select at least one subject.'); return }
+    if (!fullName.trim()) {
+      setError("Full name is required.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      setError("A valid email is required.");
+      return;
+    }
+    if (tempPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (!section.trim()) {
+      setError("Section is required.");
+      return;
+    }
+    if (subjects.length === 0) {
+      setError("Select at least one subject.");
+      return;
+    }
 
-    setLoading(true)
+    setLoading(true);
 
     // Check for duplicate email
     const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email.trim().toLowerCase())
-      .single()
+      .from("users")
+      .select("id")
+      .eq("email", email.trim().toLowerCase())
+      .single();
 
     if (existing) {
-      setError('A user with this email already exists.')
-      setLoading(false)
-      return
+      setError("A user with this email already exists.");
+      setLoading(false);
+      return;
     }
 
     // Create Supabase Auth user
@@ -53,50 +70,52 @@ export default function NewTeacherPage() {
       email: email.trim().toLowerCase(),
       password: tempPassword,
       options: {
-        data: { name: fullName.trim(), role: 'teacher' },
+        data: { name: fullName.trim(), role: "teacher" },
       },
-    })
+    });
 
     if (signUpError || !authData.user) {
-      setError(signUpError?.message ?? 'Failed to create account.')
-      setLoading(false)
-      return
+      setError(signUpError?.message ?? "Failed to create account.");
+      setLoading(false);
+      return;
     }
 
     // Update the users row created by the trigger
     const { error: updateError } = await supabase
-      .from('users')
-      .update({ name: fullName.trim(), role: 'teacher' })
-      .eq('id', authData.user.id)
+      .from("users")
+      .update({ name: fullName.trim(), role: "teacher" })
+      .eq("id", authData.user.id);
 
     if (updateError) {
-      setError('Auth account created but profile update failed.')
-      setLoading(false)
-      return
+      setError("Auth account created but profile update failed.");
+      setLoading(false);
+      return;
     }
 
     // Create the class/section for this teacher
-    const joinCode = Math.random().toString(36).slice(2, 8).toUpperCase()
-    const { error: classError } = await supabase
-      .from('classes')
-      .insert({
-        teacher_id: authData.user.id,
-        name: `${subjects.join(', ')} — ${section}`,
-        section: section.trim(),
-        join_code: joinCode,
-      })
+    const joinCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const { error: classError } = await supabase.from("classes").insert({
+      teacher_id: authData.user.id,
+      name: `${subjects.join(", ")} — ${section}`,
+      section: section.trim(),
+      join_code: joinCode,
+    });
 
     if (classError) {
-      setError('Teacher created but class setup failed. Check the Classes page.')
-      setLoading(false)
-      return
+      setError(
+        "Teacher created but class setup failed. Check the Classes page.",
+      );
+      setLoading(false);
+      return;
     }
 
-    setSuccess(`Teacher account created. Join code for ${section}: ${joinCode}`)
-    setLoading(false)
+    setSuccess(
+      `Teacher account created. Join code for ${section}: ${joinCode}`,
+    );
+    setLoading(false);
 
-    setTimeout(() => router.push('/admin'), 2000)
-  }
+    setTimeout(() => router.push("/admin"), 2000);
+  };
 
   return (
     <AppLayout title="Add Teacher">
@@ -175,27 +194,55 @@ export default function NewTeacherPage() {
       `}</style>
 
       <div className="nt-page">
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1a7a40', marginBottom: '0.35rem' }}>
+        <div style={{ marginBottom: "2rem" }}>
+          <div
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#1a7a40",
+              marginBottom: "0.35rem",
+            }}
+          >
             Admin · Account Management
           </div>
-          <h1 style={{ fontFamily: "'Lora', serif", fontSize: 'clamp(1.5rem,4vw,1.9rem)', fontWeight: 700, color: '#0d3d20', margin: '0 0 0.2rem' }}>
+          <h1
+            style={{
+              fontFamily: "'Lora', serif",
+              fontSize: "clamp(1.5rem,4vw,1.9rem)",
+              fontWeight: 700,
+              color: "#0d3d20",
+              margin: "0 0 0.2rem",
+            }}
+          >
             Add New Teacher
           </h1>
-          <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
-            Create a teacher account. A class section and join link will be generated automatically.
+          <p style={{ color: "#6b7280", fontSize: "0.9rem", margin: 0 }}>
+            Create a teacher account. A class section and join link will be
+            generated automatically.
           </p>
         </div>
 
-        {error && <div className="nt-error"><span>⚠</span><span>{error}</span></div>}
-        {success && <div className="nt-success"><span>✓</span><span>{success}</span></div>}
+        {error && (
+          <div className="nt-error">
+            <span>⚠</span>
+            <span>{error}</span>
+          </div>
+        )}
+        {success && (
+          <div className="nt-success">
+            <span>✓</span>
+            <span>{success}</span>
+          </div>
+        )}
 
         <div className="nt-field">
           <label className="nt-label">Full Name</label>
           <input
             type="text"
             value={fullName}
-            onChange={e => setFullName(e.target.value)}
+            onChange={(e) => setFullName(e.target.value)}
             placeholder="Juan dela Cruz"
             className="nt-input"
           />
@@ -206,7 +253,7 @@ export default function NewTeacherPage() {
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="teacher@school.edu"
             className="nt-input"
             autoComplete="off"
@@ -218,7 +265,7 @@ export default function NewTeacherPage() {
           <input
             type="text"
             value={tempPassword}
-            onChange={e => setTempPassword(e.target.value)}
+            onChange={(e) => setTempPassword(e.target.value)}
             placeholder="Min. 6 characters"
             className="nt-input"
             autoComplete="new-password"
@@ -226,46 +273,63 @@ export default function NewTeacherPage() {
         </div>
 
         <div className="nt-field">
-          <label className="nt-label">Section <span className="nt-label-hint">— e.g. Grade 6 — Mabini</span></label>
+          <label className="nt-label">
+            Section{" "}
+            <span className="nt-label-hint">— e.g. Grade 6 — Mabini</span>
+          </label>
           <input
             type="text"
             value={section}
-            onChange={e => setSection(e.target.value)}
+            onChange={(e) => setSection(e.target.value)}
             placeholder="Grade 6 — Mabini"
             className="nt-input"
           />
         </div>
 
         <div className="nt-field">
-          <label className="nt-label" style={{ marginBottom: '0.6rem' }}>
-            Subjects <span className="nt-label-hint">— select at least one</span>
+          <label className="nt-label" style={{ marginBottom: "0.6rem" }}>
+            Subjects{" "}
+            <span className="nt-label-hint">— select at least one</span>
           </label>
           <div className="nt-checkbox-group">
-            {SUBJECTS.map(s => (
-              <label key={s} className={`nt-checkbox-label${subjects.includes(s) ? ' checked' : ''}`}>
+            {SUBJECTS.map((s) => (
+              <label
+                key={s}
+                className={`nt-checkbox-label${subjects.includes(s) ? " checked" : ""}`}
+              >
                 <input
                   type="checkbox"
                   checked={subjects.includes(s)}
                   onChange={() => toggleSubject(s)}
                 />
-                {s === 'English' ? '📖' : s === 'Mathematics' ? '🔢' : '🔬'} {s}
+                {s === "English" ? "📖" : s === "Mathematics" ? "🔢" : "🔬"} {s}
               </label>
             ))}
           </div>
         </div>
 
         <div className="nt-btn-row">
-          <button onClick={handleCreate} disabled={loading} className="nt-btn-primary">
-            {loading
-              ? <><div className="nt-spinner" /> Creating…</>
-              : <>Create Account →</>
-            }
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            className="nt-btn-primary"
+          >
+            {loading ? (
+              <>
+                <div className="nt-spinner" /> Creating…
+              </>
+            ) : (
+              <>Create Account →</>
+            )}
           </button>
-          <button onClick={() => router.push('/admin')} className="nt-btn-cancel">
+          <button
+            onClick={() => router.push("/admin")}
+            className="nt-btn-cancel"
+          >
             Cancel
           </button>
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }
