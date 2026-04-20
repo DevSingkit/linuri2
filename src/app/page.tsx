@@ -746,7 +746,7 @@ export default function LandingPage() {
               Every student learns at their <em>own pace.</em>
             </h1>
             <p className="lp-hero-sub">
-              LINURI tracks students&apos; activity in subjects — then adapts
+              UMCLS tracks students&apos; activity in subjects — then adapts
               the difficulty so that the teacher can have a better understanding
               of each student&apos;s progress.
             </p>
@@ -795,14 +795,14 @@ export default function LandingPage() {
 
         {/* ── FEATURES ── */}
         <div className="lp-section">
-          <div className="lp-eyebrow-sm">What LINURI Does</div>
+          <div className="lp-eyebrow-sm">What UMCLS Does</div>
           <h2 className="lp-section-title">
             Smarter learning,
             <br />
             powered by AI
           </h2>
           <p className="lp-section-desc">
-            LINURI combines a decision-tree classifier with Google Gemini to
+            UMCLS combines a decision-tree classifier with Google Gemini to
             give every student a personalized learning path — automatically.
           </p>
           <div className="lp-feat-grid">
@@ -813,7 +813,7 @@ export default function LandingPage() {
                 title: "Adaptive Difficulty",
                 tag: "tag-live",
                 tagLabel: "Auto-adjusts",
-                desc: "After every quiz, LINURI adjusts the difficulty level — Basic, Standard, or Advanced — based on the student's mastery score.",
+                desc: "After every quiz, UMCLS adjusts the difficulty level — Basic, Standard, or Advanced — based on the student's mastery score.",
               },
               {
                 icon: "💡",
@@ -845,7 +845,7 @@ export default function LandingPage() {
                 title: "Teacher Lesson Builder",
                 tag: "tag-ai",
                 tagLabel: "Gemini AI",
-                desc: "Teachers input a lesson topic and LINURI auto-generates multiple-choice questions using Gemini — ready to review and publish.",
+                desc: "Teachers input a lesson topic and UMCLS auto-generates multiple-choice questions using Gemini — ready to review and publish.",
               },
               {
                 icon: "🏫",
@@ -922,7 +922,7 @@ export default function LandingPage() {
             in the classroom
           </h2>
           <p className="lp-section-desc">
-            LINURI has three distinct roles, each with their own dashboard and
+            UMCLS has three distinct roles, each with their own dashboard and
             tools.
           </p>
           <div className="lp-roles">
@@ -960,7 +960,7 @@ export default function LandingPage() {
                   "View all users, classes, and mastery records",
                   "Access school-wide mastery report by subject",
                   "Print reports directly from the dashboard",
-                  "Oversee the entire LINURI system",
+                  "Oversee the entire UMCLS system",
                 ],
               },
             ].map((r) => (
@@ -998,19 +998,19 @@ export default function LandingPage() {
                   cls: "lp-mc-nh",
                   icon: "📌",
                   title: "Needs Help",
-                  desc: "The student scored below the threshold. LINURI steps down to Basic difficulty and encourages re-attempt with hints enabled.",
+                  desc: "The student scored below the threshold. UMCLS steps down to Basic difficulty and encourages re-attempt with hints enabled.",
                 },
                 {
                   cls: "lp-mc-dv",
                   icon: "📈",
                   title: "Developing",
-                  desc: "The student is on track but not yet consistent. LINURI keeps difficulty at Standard and monitors for regression.",
+                  desc: "The student is on track but not yet consistent. UMCLS keeps difficulty at Standard and monitors for regression.",
                 },
                 {
                   cls: "lp-mc-ms",
                   icon: "🌟",
                   title: "Mastered",
-                  desc: "The student has demonstrated consistent accuracy. LINURI advances them to Advanced difficulty for continued growth.",
+                  desc: "The student has demonstrated consistent accuracy. UMCLS advances them to Advanced difficulty for continued growth.",
                 },
               ].map((m) => (
                 <div key={m.cls} className={`lp-mc ${m.cls}`}>
@@ -1047,8 +1047,8 @@ export default function LandingPage() {
         {/* ── FOOTER ── */}
         <footer className="lp-footer">
           <div className="lp-footer-brand">
-            <div className="lp-footer-mark">L</div>
-            <span className="lp-footer-name">LINURI</span>
+            <div className="lp-footer-mark">U</div>
+            <span className="lp-footer-name">UMCLS</span>
           </div>
           <div className="lp-footer-meta">
             Literacy and Numeracy Readiness Indicator
