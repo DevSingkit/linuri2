@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function ShortJoinRedirect({
+export default async function ShortJoinRedirect({
   params,
 }: {
-  params: { code: string };
+  params: Promise<{ code: string }>;
 }) {
-  redirect(`/auth/join/${params.code.toUpperCase()}`);
+  const { code } = await params;
+  redirect(`/auth/join/${code.toUpperCase()}`);
 }
