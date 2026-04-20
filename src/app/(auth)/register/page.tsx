@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
   const params = useSearchParams();
   const code = params.get("code") ?? "";
@@ -71,47 +71,17 @@ export default function RegisterPage() {
     <div style={s.page}>
       <div style={s.card}>
         <h1 style={s.h1}>Create Student Account</h1>
-        <p
-          style={{
-            color: "#6b7280",
-            fontSize: "0.88rem",
-            margin: "0.25rem 0 1.5rem",
-          }}
-        >
+        <p style={{ color: "#6b7280", fontSize: "0.88rem", margin: "0.25rem 0 1.5rem" }}>
           Register using your LRN or email address
         </p>
 
         {error && <div style={s.errBox}>{error}</div>}
 
         {[
-          {
-            label: "Full Name",
-            value: name,
-            setter: setName,
-            type: "text",
-            placeholder: "Your full name",
-          },
-          {
-            label: "LRN or Email",
-            value: identifier,
-            setter: setIdentifier,
-            type: "text",
-            placeholder: "12-digit LRN or email address",
-          },
-          {
-            label: "Password",
-            value: password,
-            setter: setPassword,
-            type: "password",
-            placeholder: "Choose a password",
-          },
-          {
-            label: "Class Join Code",
-            value: joinCode,
-            setter: setJoinCode,
-            type: "text",
-            placeholder: "e.g. ABC1234",
-          },
+          { label: "Full Name", value: name, setter: setName, type: "text", placeholder: "Your full name" },
+          { label: "LRN or Email", value: identifier, setter: setIdentifier, type: "text", placeholder: "12-digit LRN or email address" },
+          { label: "Password", value: password, setter: setPassword, type: "password", placeholder: "Choose a password" },
+          { label: "Class Join Code", value: joinCode, setter: setJoinCode, type: "text", placeholder: "e.g. ABC1234" },
         ].map(({ label, value, setter, type, placeholder }) => (
           <div key={label} style={s.field}>
             <label style={s.label}>{label}</label>
@@ -150,6 +120,20 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div style={s.page}>
+        <div style={s.card}>
+          <p style={{ color: "#6b7280" }}>Loading…</p>
+        </div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }
 
